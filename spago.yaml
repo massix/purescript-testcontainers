@@ -1,0 +1,20 @@
+package:
+  dependencies:
+    - aff
+    - aff-promise
+    - console
+    - effect
+    - foreign
+    - js-promise-aff
+    - node-process
+    - prelude
+    - spec
+    - stringutils
+  name: testcontainers
+  test:
+    dependencies: []
+    main: Test.Main
+workspace:
+  extra_packages: {}
+  package_set:
+    registry: 47.1.0
