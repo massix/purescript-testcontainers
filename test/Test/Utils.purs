@@ -9,8 +9,9 @@ import Effect.Aff.Class (class MonadAff)
 import Partial.Unsafe (unsafePartial)
 import Test.Partials (forceRight)
 import Test.Spec.Assertions (shouldSatisfy)
-import Test.TestContainers (exec)
-import Test.TestContainers.Types (TestContainer)
+import Test.TestContainers (exec, mkContainer)
+import Test.TestContainers.Monad (WithContainer, configure, getContainer)
+import Test.TestContainers.Types (class IsImage, TestContainer)
 
 launchCommand :: ∀ m. MonadAff m => MonadThrow Error m => TestContainer -> Array String -> (String -> m Unit) -> (Int -> m Unit) -> m Unit
 launchCommand c cmds vOutput vCode = do
@@ -21,3 +22,13 @@ launchCommand c cmds vOutput vCode = do
   vOutput output
   vCode exitCode
 
+mkAffContainerM :: ∀ a m. IsImage a => MonadAff m => a -> WithContainer Unit -> m TestContainer
+mkAffContainerM img conf = do
+  let cnt = mkContainer img # configure $ do 
+        conf
+        res <- getContainer
+        pure res
+  pure cnt
+
+mkAffContainer :: ∀ a m. IsImage a => MonadAff m => a -> (TestContainer -> TestContainer) -> m TestContainer
+mkAffContainer img conf = pure <$> conf $ mkContainer img

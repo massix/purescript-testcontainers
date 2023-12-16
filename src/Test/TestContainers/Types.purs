@@ -20,6 +20,8 @@ module Test.TestContainers.Types
   , toImage
   , PullPolicy(..)
   , capToString
+  , StartupTimeout(..)
+  , FileMode(..)
   ) where
 
 import Prelude
@@ -44,6 +46,9 @@ type User = String
 type ResourcesQuota = { cpu :: Number, memory :: Number }
 type MemorySize = Int
 type ExecResult = { output :: String, exitCode :: Int }
+
+newtype StartupTimeout = StartupTimeout Int
+newtype FileMode = FileMode String
 
 foreign import data GenericContainer :: Type
 foreign import data StartedTestContainer :: Type
@@ -158,9 +163,9 @@ instance Show IPCMode where
   show = ipcModeToString
 
 data CopyContentToContainer
-  = FromSource FilePath FilePath
-  | FromContent String FilePath
-  | FromDirectory FilePath FilePath
+  = FromSource FilePath FilePath FileMode
+  | FromContent String FilePath FileMode
+  | FromDirectory FilePath FilePath FileMode
 
 data TestContainer
   = StartedTestContainer Image StartedTestContainer
@@ -182,8 +187,7 @@ instance Eq TestContainer where
 
 -- | Define the Wait Strategy
 data WaitStrategy
-  = StartupTimeout Int -- ^ Wait for Int amount of milliseconds
-  | ListeningPorts -- ^ Default waiting strategy, wait for the exposed ports to be available
+  = ListeningPorts -- ^ Default waiting strategy, wait for the exposed ports to be available
   | LogOutput String Int -- ^ Look in the logs for the provided String to appear at least Int times
   | HealthCheck -- ^ Wait until the health check is healthy
   | HttpStatusCode String Int Int -- ^ Wait until the Http request at the path String and port Int returns the statuscode Int

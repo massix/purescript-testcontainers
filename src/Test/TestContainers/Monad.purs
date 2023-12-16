@@ -22,14 +22,15 @@ module Test.TestContainers.Monad
   , setResourcesQuotaM
   , setSharedMemorySizeM
   , setReuseM
+  , setStartupTimeoutM
   , setWaitStrategyM
   ) where
 
 import Prelude
 
 import Data.Tuple (Tuple(..))
-import Test.TestContainers (setAddedCapabilities, setBindMounts, setCommand, setCopyFilesToContainer, setDefaultLogDriver, setDroppedCapabilities, setEntrypoint, setEnvironment, setExposedPorts, setIpcMode, setLabels, setName, setPrivilegedMode, setPullPolicy, setResourcesQuota, setReuse, setSharedMemorySize, setTmpFs, setUser, setWaitStrategy, setWorkingDirectory)
-import Test.TestContainers.Types (BindMounts, Capability, CopyContentToContainer, FilePath, IPCMode, KV, MemorySize, PullPolicy, ResourcesQuota, TestContainer, TmpFS, User, WaitStrategy)
+import Test.TestContainers (setAddedCapabilities, setBindMounts, setCommand, setCopyFilesToContainer, setDefaultLogDriver, setDroppedCapabilities, setEntrypoint, setEnvironment, setExposedPorts, setIpcMode, setLabels, setName, setPrivilegedMode, setPullPolicy, setResourcesQuota, setReuse, setSharedMemorySize, setStartupTimeout, setTmpFs, setUser, setWaitStrategy, setWorkingDirectory)
+import Test.TestContainers.Types (BindMounts, Capability, CopyContentToContainer, FilePath, IPCMode, KV, MemorySize, PullPolicy, ResourcesQuota, StartupTimeout, TestContainer, TmpFS, User, WaitStrategy)
 
 newtype WithContainer a = WithContainer { runConfiguration :: TestContainer -> Tuple a TestContainer }
 
@@ -143,6 +144,9 @@ setSharedMemorySizeM = setAndUnit <<< setSharedMemorySize
 
 setReuseM :: WithContainer Unit
 setReuseM = setAndUnit $ setReuse
+
+setStartupTimeoutM :: StartupTimeout -> WithContainer Unit
+setStartupTimeoutM = setAndUnit <<< setStartupTimeout
 
 setWaitStrategyM :: Array WaitStrategy -> WithContainer Unit
 setWaitStrategyM = setAndUnit <<< setWaitStrategy

@@ -1,36 +1,37 @@
 module Test.TestContainers
-  ( mkContainer
-  , setExposedPorts
-  , setPullPolicy
-  , setCommand
-  , setEntrypoint
-  , setEnvironment
-  , setLabels
-  , setBindMounts
-  , setName
-  , setCopyFilesToContainer
-  , setWorkingDirectory
-  , setDefaultLogDriver
-  , setTmpFs
-  , setUser
-  , setPrivilegedMode
-  , setAddedCapabilities
-  , setDroppedCapabilities
-  , setIpcMode
-  , setResourcesQuota
-  , setSharedMemorySize
-  , setReuse
-  , stopContainer
-  , startContainer
-  , restartContainer
-  , getMappedPort
+  ( exec
   , getFirstMappedPort
-  , exec
-  , withContainer
-  , setWaitStrategy
-  , getName
   , getHost
   , getId
+  , getMappedPort
+  , getName
+  , mkContainer
+  , restartContainer
+  , setAddedCapabilities
+  , setBindMounts
+  , setCommand
+  , setCopyFilesToContainer
+  , setDefaultLogDriver
+  , setDroppedCapabilities
+  , setEntrypoint
+  , setEnvironment
+  , setExposedPorts
+  , setIpcMode
+  , setLabels
+  , setName
+  , setPrivilegedMode
+  , setPullPolicy
+  , setResourcesQuota
+  , setReuse
+  , setSharedMemorySize
+  , setTmpFs
+  , setUser
+  , setStartupTimeout
+  , setWaitStrategy
+  , setWorkingDirectory
+  , startContainer
+  , stopContainer
+  , withContainer
   ) where
 
 import Prelude
@@ -40,7 +41,7 @@ import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import Test.TestContainers.Types (class IsImage, BindMounts, Capability, CopyContentToContainer, ExecResult, FilePath, GenericContainer, IPCMode, Image(..), KV, MemorySize, PullPolicy, ResourcesQuota, StartedTestContainer, StoppedTestContainer, TestContainer(..), TmpFS, User, WaitStrategy, capToString, toImage)
+import Test.TestContainers.Types (class IsImage, BindMounts, Capability, CopyContentToContainer, ExecResult, FilePath, GenericContainer, IPCMode, Image(..), KV, MemorySize, PullPolicy, ResourcesQuota, StartedTestContainer, StartupTimeout, StoppedTestContainer, TestContainer(..), TmpFS, User, WaitStrategy, capToString, toImage)
 
 foreign import mkContainerImpl :: (GenericContainer -> TestContainer) -> String -> TestContainer
 foreign import setExposedPortsImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array Int -> TestContainer
@@ -63,6 +64,7 @@ foreign import setIpcModeImpl :: TestContainer -> (GenericContainer -> TestConta
 foreign import setResourcesQuotaImpl :: TestContainer -> (GenericContainer -> TestContainer) -> ResourcesQuota -> TestContainer
 foreign import setSharedMemorySizeImpl :: TestContainer -> (GenericContainer -> TestContainer) -> MemorySize -> TestContainer
 foreign import setReuseImpl :: TestContainer -> (GenericContainer -> TestContainer) -> TestContainer
+foreign import setStartupTimeoutImpl :: TestContainer -> (GenericContainer -> TestContainer) -> StartupTimeout -> TestContainer
 foreign import setWaitStrategyImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array WaitStrategy -> TestContainer
 foreign import getIdImpl :: TestContainer -> (String -> Either String String) -> (String -> Either String String) -> Effect (Either String String)
 foreign import getNameImpl
@@ -225,6 +227,11 @@ setSharedMemorySize _ c = c
 setReuse :: TestContainer -> TestContainer
 setReuse c@(GenericContainer i _) = setReuseImpl c (GenericContainer i)
 setReuse c = c
+
+-- | Configure the startup timeout
+setStartupTimeout :: StartupTimeout -> TestContainer -> TestContainer
+setStartupTimeout t c@(GenericContainer i _) = setStartupTimeoutImpl c (GenericContainer i) t
+setStartupTimeout _ c = c
 
 -- | Configure the wait strategy
 setWaitStrategy :: Array WaitStrategy -> TestContainer -> TestContainer

@@ -1,16 +1,8 @@
-"use strict";
-
 import {
   GenericContainer,
   PullPolicy,
   Wait,
 } from "testcontainers";
-
-import { LogWaitStrategy } from "testcontainers/build/wait-strategies/log-wait-strategy.js";
-import { HostPortWaitStrategy } from "testcontainers/build/wait-strategies/host-port-wait-strategy.js";
-import { ShellWaitStrategy } from "testcontainers/build/wait-strategies/shell-wait-strategy.js";
-import { HttpWaitStrategy } from "testcontainers/build/wait-strategies/http-wait-strategy.js";
-import { HealthCheckWaitStrategy } from "testcontainers/build/wait-strategies/health-check-wait-strategy.js";
 
 /**
  * @param {GenericContainer} container
@@ -23,9 +15,7 @@ const cloneContainer = container => {
   return clone;
 };
 
-export const mkContainerImpl = Constructor => image => {
-  return Constructor(new GenericContainer(image));
-};
+export const mkContainerImpl = Constructor => image => Constructor(new GenericContainer(image));
 
 export const setPullPolicyImpl = GC => Constructor => PP => {
   const clone = cloneContainer(GC.value1);
@@ -128,11 +118,11 @@ export const setCopyFilesToContainerImpl = GC => Constructor => copyFiles => {
 
   copyFiles.forEach(cp => {
     if (cp.constructor.name == "FromSource") {
-      clone.withCopyFilesToContainer([{ source: cp.value0, target: cp.value1 }]);
+      clone.withCopyFilesToContainer([{ source: cp.value0, target: cp.value1, mode: parseInt(cp.value2, 8) }]);
     } else if (cp.constructor.name == "FromContent") {
-      clone.withCopyContentToContainer([{ content: cp.value0, target: cp.value1 }]);
+      clone.withCopyContentToContainer([{ content: cp.value0, target: cp.value1, mode: parseInt(cp.value2, 8) }]);
     } else if (cp.constructor.name == "FromDirectory") {
-      clone.withCopyDirectoriesToContainer([{ source: cp.value0, target: cp.value1 }]);
+      clone.withCopyDirectoriesToContainer([{ source: cp.value0, target: cp.value1, mode: parseInt(cp.value2, 8) }]);
     };
   });
 
@@ -172,25 +162,28 @@ export const setDefaultLogDriverImpl = GC => Constructor => {
   return Constructor(clone);
 };
 
+export const setStartupTimeoutImpl = GC => Constructor => startupTimeout => {
+  const clone = cloneContainer(GC.value1);
+  clone.withStartupTimeout(startupTimeout);
+  return Constructor(clone);
+};
+
 export const setWaitStrategyImpl = GC => Constructor => waitStrategies => {
   const clone = cloneContainer(GC.value1);
 
   const toJs = waitStrategies.map(w => {
-    if (w.constructor.name == "StartupTimeout") {
-      clone.withStartupTimeout(w.value0);
-      return undefined;
-    } else if (w.constructor.name == "ListeningPorts") {
-      return new HostPortWaitStrategy();
+    if (w.constructor.name == "ListeningPorts") {
+      return Wait.forListeningPorts();
     } else if (w.constructor.name == "LogOutput") {
-      return new LogWaitStrategy(w.value0, w.value1);
+      return Wait.forLogMessage(w.value0, w.value1);
     } else if (w.constructor.name == "HealthCheck") {
-      return new HealthCheckWaitStrategy();
+      return Wait.forHealthCheck();
     } else if (w.constructor.name == "HttpStatusCode") {
-      return new HttpWaitStrategy(w.value0, w.value1).forStatusCode(w.value2);
+      return Wait.forHttp(w.value0, w.value1).forStatusCode(w.value2);
     } else if (w.constructor.name == "HttpResponsePredicate") {
-      return new HttpWaitStrategy(w.value0, w.value1).forResponsePredicate(w.value2);
+      return Wait.forHttp(w.value0, w.value1).forResponsePredicate(w.value2);
     } else if (w.constructor.name == "ShellCommand") {
-      return new ShellWaitStrategy(w.value0);
+      return Wait.forSuccessfulCommand(w.value0);
     };
   }).filter(x => x !== undefined);
 
