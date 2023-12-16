@@ -1,0 +1,20 @@
+{
+  "neoconf": {
+    "live_reload": true,
+    "plugins": {
+      "jsonls": { "enabled": true },
+      "yamlls": { "enabled": true }
+    }
+  },
+  "lspconfig": {
+    "purescriptls": {
+      "purescript.addNpmPath": true,
+      "purescript.fastRebuild": true,
+      "purescript.addSpagoSources": true,
+      "purescript.exportsCodeLens": true,
+      "purescript.autocompleteAddImport": true,
+      "purescript.declarationTypeCodeLens": true,
+      "purescript.diagnosticsOnType": true
+    }
+  }
+}
