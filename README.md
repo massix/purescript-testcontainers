@@ -1,5 +1,7 @@
 # Purescript-TestContainers
 
+![Tests](https://github.com/massix/purescript-testcontainers/workflows/purescript.yml/badge.svg)
+
 ## Description
 This is my first attempt at creating a library for PureScript.
 
