@@ -24,13 +24,17 @@ module Test.TestContainers.Monad
   , setReuseM
   , setStartupTimeoutM
   , setWaitStrategyM
+  , setNetworkModeM
+  , setExtraHostsM
+  , setNetworkAliasesM
+  , setNetworkM
   ) where
 
 import Prelude
 
 import Data.Tuple (Tuple(..))
-import Test.TestContainers (setAddedCapabilities, setBindMounts, setCommand, setCopyFilesToContainer, setDefaultLogDriver, setDroppedCapabilities, setEntrypoint, setEnvironment, setExposedPorts, setIpcMode, setLabels, setName, setPrivilegedMode, setPullPolicy, setResourcesQuota, setReuse, setSharedMemorySize, setStartupTimeout, setTmpFs, setUser, setWaitStrategy, setWorkingDirectory)
-import Test.TestContainers.Types (BindMounts, Capability, CopyContentToContainer, FilePath, IPCMode, KV, MemorySize, PullPolicy, ResourcesQuota, StartupTimeout, TestContainer, TmpFS, User, WaitStrategy)
+import Test.TestContainers (setAddedCapabilities, setBindMounts, setCommand, setCopyFilesToContainer, setDefaultLogDriver, setDroppedCapabilities, setEntrypoint, setEnvironment, setExposedPorts, setExtraHosts, setIpcMode, setLabels, setName, setNetwork, setNetworkAliases, setNetworkMode, setPrivilegedMode, setPullPolicy, setResourcesQuota, setReuse, setSharedMemorySize, setStartupTimeout, setTmpFs, setUser, setWaitStrategy, setWorkingDirectory)
+import Test.TestContainers.Types (BindMounts, Capability, CopyContentToContainer, ExtraHost, FilePath, IPCMode, KV, MemorySize, Network, NetworkMode, PullPolicy, ResourcesQuota, StartupTimeout, TestContainer, TmpFS, User, WaitStrategy)
 
 newtype WithContainer a = WithContainer { runConfiguration :: TestContainer -> Tuple a TestContainer }
 
@@ -150,3 +154,15 @@ setStartupTimeoutM = setAndUnit <<< setStartupTimeout
 
 setWaitStrategyM :: Array WaitStrategy -> WithContainer Unit
 setWaitStrategyM = setAndUnit <<< setWaitStrategy
+
+setNetworkModeM :: NetworkMode -> WithContainer Unit
+setNetworkModeM = setAndUnit <<< setNetworkMode
+
+setExtraHostsM :: Array ExtraHost -> WithContainer Unit
+setExtraHostsM = setAndUnit <<< setExtraHosts
+
+setNetworkAliasesM :: Array String -> WithContainer Unit
+setNetworkAliasesM = setAndUnit <<< setNetworkAliases
+
+setNetworkM :: Network -> WithContainer Unit
+setNetworkM = setAndUnit <<< setNetwork

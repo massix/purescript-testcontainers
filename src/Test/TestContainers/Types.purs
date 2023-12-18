@@ -10,6 +10,12 @@ module Test.TestContainers.Types
   , GenericContainer
   , StartedTestContainer
   , StoppedTestContainer
+  , StartedNetwork
+  , StoppedNetwork
+  , GenericNetwork
+  , NetworkId
+  , NetworkName
+  , ExtraHost
   , Capability(..)
   , IPCMode(..)
   , CopyContentToContainer(..)
@@ -22,6 +28,8 @@ module Test.TestContainers.Types
   , capToString
   , StartupTimeout(..)
   , FileMode(..)
+  , NetworkMode(..)
+  , Network(..)
   ) where
 
 import Prelude
@@ -46,13 +54,21 @@ type User = String
 type ResourcesQuota = { cpu :: Number, memory :: Number }
 type MemorySize = Int
 type ExecResult = { output :: String, exitCode :: Int }
+type NetworkId = String
+type NetworkName = String
+type ExtraHost = { host :: String, ipAddress :: String }
 
 newtype StartupTimeout = StartupTimeout Int
 newtype FileMode = FileMode String
+newtype NetworkMode = NetworkMode String
 
 foreign import data GenericContainer :: Type
 foreign import data StartedTestContainer :: Type
 foreign import data StoppedTestContainer :: Type
+
+foreign import data GenericNetwork :: Type
+foreign import data StoppedNetwork :: Type
+foreign import data StartedNetwork :: Type
 
 data Capability
   = AuditControl
@@ -171,6 +187,16 @@ data TestContainer
   = StartedTestContainer Image StartedTestContainer
   | StoppedTestContainer Image StoppedTestContainer
   | GenericContainer Image GenericContainer
+
+data Network
+  = StartedNetwork StartedNetwork
+  | StoppedNetwork StoppedNetwork
+  | GenericNetwork GenericNetwork
+
+instance Show Network where
+  show (StartedNetwork _) = "(StartedNetwork)"
+  show (StoppedNetwork _) = "(StoppedNetwork)"
+  show (GenericNetwork _) = "(GenericNetwork)"
 
 data PullPolicy = AlwaysPull | DefaultPolicy
 
