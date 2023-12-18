@@ -87,9 +87,9 @@ basicTest = do
         Right _ -> pure unit
 
     it "should change the working directory" $ do
-      sleeper <- mkAffContainer "alpine:latest" $ 
+      sleeper <- mkAffContainer "alpine:latest" $
         setWorkingDirectory "/tmp"
-        <<< setCommand ["sleep", "30"]
+          <<< setCommand [ "sleep", "30" ]
 
       res <- withContainer sleeper $ \c -> do
         launchCommand c [ "pwd" ]

@@ -40,18 +40,18 @@ networkTest = do
   describe "Network utilisation" $ do
     it "should be able to define extra hosts" $ do
       alpine <- mkAffContainer "alpine:latest" $
-        setCommand ["sleep", "infinity"]
-        <<< setExtraHosts 
-          [ { host: "foo", ipAddress: "10.250.0.42" }
-          , { host: "bar", ipAddress: "10.250.0.43" }
-          ]
+        setCommand [ "sleep", "infinity" ]
+          <<< setExtraHosts
+            [ { host: "foo", ipAddress: "10.250.0.42" }
+            , { host: "bar", ipAddress: "10.250.0.43" }
+            ]
 
       res <- withContainer alpine $ \c -> do
-        launchCommand c ["getent", "hosts", "foo"]
+        launchCommand c [ "getent", "hosts", "foo" ]
           (\s -> s `shouldEqual` "10.250.0.42       foo  foo\n")
           (\exitCode -> exitCode `shouldEqual` 0)
 
-        launchCommand c ["getent", "hosts", "bar"]
+        launchCommand c [ "getent", "hosts", "bar" ]
           (\s -> s `shouldEqual` "10.250.0.43       bar  bar\n")
           (\exitCode -> exitCode `shouldEqual` 0)
 
@@ -65,22 +65,22 @@ networkTest = do
         Left e -> fail e
         Right network -> do
           firstAlpine <- mkAffContainer "alpine:latest" $
-            setCommand ["sleep", "infinity"]
-            <<< setNetwork network
-            <<< setNetworkAliases ["firstAlpine"]
+            setCommand [ "sleep", "infinity" ]
+              <<< setNetwork network
+              <<< setNetworkAliases [ "firstAlpine" ]
 
           secondAlpine <- mkAffContainer "alpine:latest" $
-            setCommand ["sleep", "infinity"]
-            <<< setNetwork network
-            <<< setNetworkAliases ["secondAlpine"]
+            setCommand [ "sleep", "infinity" ]
+              <<< setNetwork network
+              <<< setNetworkAliases [ "secondAlpine" ]
 
           res <- withContainer firstAlpine $ \c ->
             withContainer secondAlpine $ \c' -> do
-              launchCommand c ["getent", "hosts", "secondAlpine"]
+              launchCommand c [ "getent", "hosts", "secondAlpine" ]
                 (\s -> s `shouldInclude` "secondAlpine  secondAlpine\n")
                 (\exitCode -> exitCode `shouldEqual` 0)
 
-              launchCommand c' ["getent", "hosts", "firstAlpine"]
+              launchCommand c' [ "getent", "hosts", "firstAlpine" ]
                 (\s -> s `shouldInclude` "firstAlpine  firstAlpine\n")
                 (\exitCode -> exitCode `shouldEqual` 0)
 

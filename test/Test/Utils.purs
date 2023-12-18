@@ -24,10 +24,11 @@ launchCommand c cmds vOutput vCode = do
 
 mkAffContainerM :: ∀ a m. IsImage a => MonadAff m => a -> WithContainer Unit -> m TestContainer
 mkAffContainerM img conf = do
-  let cnt = mkContainer img # configure $ do 
-        conf
-        res <- getContainer
-        pure res
+  let
+    cnt = mkContainer img # configure $ do
+      conf
+      res <- getContainer
+      pure res
   pure cnt
 
 mkAffContainer :: ∀ a m. IsImage a => MonadAff m => a -> (TestContainer -> TestContainer) -> m TestContainer

@@ -35,6 +35,7 @@ module Test.TestContainers.Types
 import Prelude
 
 newtype Image = Image String
+
 class IsImage c where
   toImage :: c -> Image
 

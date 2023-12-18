@@ -18,16 +18,15 @@ entrypointTest = describe "Test Entrypoint" $ do
   it "should be able to override the entrypoint" $ do
     sleeper <- mkAffContainer "alpine:latest" $
       setEntrypoint [ "/docker-entrypoint.sh" ]
-      <<< setCommand ["30"]
-      <<< setCopyFilesToContainer [ FromSource "./test/docker-entrypoint.sh" "/docker-entrypoint.sh" (FileMode "0755") ]
+        <<< setCommand [ "30" ]
+        <<< setCopyFilesToContainer [ FromSource "./test/docker-entrypoint.sh" "/docker-entrypoint.sh" (FileMode "0755") ]
 
     res <- withContainer sleeper $ \c -> do
-      execResult <- exec ["ps"] c
+      execResult <- exec [ "ps" ] c
       execResult `shouldSatisfy` isRight
       let { output } = unsafePartial $ forceRight execResult
 
       output `shouldInclude` "sleep 30"
-
 
     case res of
       Left e -> throwError $ error e
