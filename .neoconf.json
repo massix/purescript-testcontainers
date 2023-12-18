@@ -14,7 +14,8 @@
       "purescript.exportsCodeLens": true,
       "purescript.autocompleteAddImport": true,
       "purescript.declarationTypeCodeLens": true,
-      "purescript.diagnosticsOnType": true
+      "purescript.diagnosticsOnType": true,
+      "purescript.formatter": "purs-tidy"
     }
   }
 }

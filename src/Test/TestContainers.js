@@ -191,6 +191,30 @@ export const setWaitStrategyImpl = GC => Constructor => waitStrategies => {
   return Constructor(clone);
 };
 
+export const setNetworkModeImpl = GC => Constructor => networkMode => {
+  const clone = cloneContainer(GC.value1);
+  clone.withNetworkMode(networkMode);
+  return Constructor(clone);
+};
+
+export const setExtraHostsImpl = GC => Constructor => extraHosts => {
+  const clone = cloneContainer(GC.value1);
+  clone.withExtraHosts(extraHosts);
+  return Constructor(clone);
+};
+
+export const setNetworkAliasesImpl = GC => Constructor => networkAliases => {
+  const clone = cloneContainer(GC.value1);
+  clone.withNetworkAliases(...networkAliases);
+  return Constructor(clone);
+};
+
+export const setNetworkImpl = GC => Constructor => network => {
+  const clone = cloneContainer(GC.value1);
+  clone.withNetwork(network.value0);
+  return Constructor(clone);
+};
+
 export const getMappedPortImpl = GC => port => Left => Right => () => {
   try {
     return Right(GC.value1.getMappedPort(port));

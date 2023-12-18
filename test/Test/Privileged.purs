@@ -17,7 +17,7 @@ import Test.Utils (mkAffContainer)
 privilegedTest :: Spec Unit
 privilegedTest = describe "Privileged Mode" $ do
   it "should set privileged mode correctly" $ do
-    dockerDind <- mkAffContainer "docker:dind" $ setPrivilegedMode <<< setWaitStrategy [LogOutput "API listen on" 1]
+    dockerDind <- mkAffContainer "docker:dind" $ setPrivilegedMode <<< setWaitStrategy [ LogOutput "API listen on" 1 ]
     res <- withContainer dockerDind $ \c -> do
       execResult <- exec [ "docker", "ps" ] c
       execResult `shouldSatisfy` isRight

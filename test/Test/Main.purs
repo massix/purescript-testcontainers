@@ -11,6 +11,8 @@ import Test.Basic (basicTest)
 import Test.Binds (bindTest)
 import Test.Entrypoint (entrypointTest)
 import Test.EnvironmentVariables (environmentTest)
+import Test.Network (networkTest)
+import Test.NetworkMode (networkModeTest)
 import Test.Ports (portMappingTest)
 import Test.Privileged (privilegedTest)
 import Test.Spec (describe)
@@ -31,6 +33,8 @@ main = launchAff_ $ runSpec' configuration [ consoleReporter ] $ do
     environmentTest
     waitStrategyTest
     entrypointTest
+    networkModeTest
+    networkTest
 
   where
   configuration :: Config

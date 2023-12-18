@@ -24,7 +24,7 @@ bindTest = do
       alpine <- liftEffect $ do
         currentDir <- Process.cwd
         mkAlpineContainer $
-          setBindMounts [{ readOnly: true, source: currentDir <> "/test/bound_file.txt", target: "/bound_file.txt" }]
+          setBindMounts [ { readOnly: true, source: currentDir <> "/test/bound_file.txt", target: "/bound_file.txt" } ]
 
       res <- withContainer alpine $ \c -> do
         res <- exec [ "cat", "/bound_file.txt" ] c
@@ -41,7 +41,7 @@ bindTest = do
       alpine <- liftEffect $ do
         currentDir <- Process.cwd
         mkAlpineContainer $
-          setBindMounts [{ readOnly: true, source: currentDir <> "/src/", target: "/sources" }]
+          setBindMounts [ { readOnly: true, source: currentDir <> "/src/", target: "/sources" } ]
 
       res <- withContainer alpine $ \c -> do
         res <- exec [ "ls", "/sources" ] c
@@ -64,7 +64,7 @@ bindTest = do
       alpine <- liftEffect $ do
         currentDir <- Process.cwd
         mkAlpineContainer $
-          setCopyFilesToContainer 
+          setCopyFilesToContainer
             [ (FromSource "test/bound_file.txt" "/bound_file.txt" $ FileMode "0644")
             , (FromContent "hello world from copied content" "/copied_content.txt" $ FileMode "0644")
             , (FromDirectory (currentDir <> "/test") "/test" $ FileMode "0644")
@@ -93,7 +93,7 @@ bindTest = do
     it "should bind tmpfs volumes" $ do
       alpine <- mkAffContainer "alpine:latest" $
         setCommand [ "sleep", "30" ]
-        <<< setTmpFs { path: "/tmpfsmount", mountOptions: "rw,noexec,nosuid,size=655536k" }
+          <<< setTmpFs { path: "/tmpfsmount", mountOptions: "rw,noexec,nosuid,size=655536k" }
 
       res <- withContainer alpine $ \c -> do
         launchCommand c [ "touch", "/tmpfsmount/a" ] (\_ -> pure unit) (\code -> code `shouldEqual` 0)
@@ -108,7 +108,7 @@ bindTest = do
   where
   -- TODO: this can be probably done in a better way
   mkAlpineContainer :: (TestContainer -> TestContainer) -> Effect TestContainer
-  mkAlpineContainer action = do 
+  mkAlpineContainer action = do
     let
       cnt = mkContainer "alpine:latest" # configure $ do
         setCommandM [ "sleep", "360" ]

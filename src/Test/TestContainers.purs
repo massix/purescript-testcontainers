@@ -16,9 +16,13 @@ module Test.TestContainers
   , setEntrypoint
   , setEnvironment
   , setExposedPorts
+  , setExtraHosts
   , setIpcMode
   , setLabels
   , setName
+  , setNetwork
+  , setNetworkAliases
+  , setNetworkMode
   , setPrivilegedMode
   , setPullPolicy
   , setResourcesQuota
@@ -41,7 +45,7 @@ import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import Test.TestContainers.Types (class IsImage, BindMounts, Capability, CopyContentToContainer, ExecResult, FilePath, GenericContainer, IPCMode, Image(..), KV, MemorySize, PullPolicy, ResourcesQuota, StartedTestContainer, StartupTimeout, StoppedTestContainer, TestContainer(..), TmpFS, User, WaitStrategy, capToString, toImage)
+import Test.TestContainers.Types (class IsImage, BindMounts, Capability, CopyContentToContainer, ExecResult, ExtraHost, FilePath, GenericContainer, IPCMode, Image(..), KV, MemorySize, Network(..), NetworkMode(..), PullPolicy, ResourcesQuota, StartedTestContainer, StartupTimeout, StoppedTestContainer, TestContainer(..), TmpFS, User, WaitStrategy, capToString, toImage)
 
 foreign import mkContainerImpl :: (GenericContainer -> TestContainer) -> String -> TestContainer
 foreign import setExposedPortsImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array Int -> TestContainer
@@ -66,6 +70,10 @@ foreign import setSharedMemorySizeImpl :: TestContainer -> (GenericContainer -> 
 foreign import setReuseImpl :: TestContainer -> (GenericContainer -> TestContainer) -> TestContainer
 foreign import setStartupTimeoutImpl :: TestContainer -> (GenericContainer -> TestContainer) -> StartupTimeout -> TestContainer
 foreign import setWaitStrategyImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array WaitStrategy -> TestContainer
+foreign import setNetworkModeImpl :: TestContainer -> (GenericContainer -> TestContainer) -> String -> TestContainer
+foreign import setExtraHostsImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array ExtraHost -> TestContainer
+foreign import setNetworkAliasesImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array String -> TestContainer
+foreign import setNetworkImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Network -> TestContainer
 foreign import getIdImpl :: TestContainer -> (String -> Either String String) -> (String -> Either String String) -> Effect (Either String String)
 foreign import getNameImpl
   :: TestContainer
@@ -237,6 +245,23 @@ setStartupTimeout _ c = c
 setWaitStrategy :: Array WaitStrategy -> TestContainer -> TestContainer
 setWaitStrategy w c@(GenericContainer i _) = setWaitStrategyImpl c (GenericContainer i) w
 setWaitStrategy _ c = c
+
+-- | Sets the network mode
+setNetworkMode :: NetworkMode -> TestContainer -> TestContainer
+setNetworkMode (NetworkMode n) c@(GenericContainer i _) = setNetworkModeImpl c (GenericContainer i) n
+setNetworkMode _ c = c
+
+setExtraHosts :: Array ExtraHost -> TestContainer -> TestContainer
+setExtraHosts hosts c@(GenericContainer i _) = setExtraHostsImpl c (GenericContainer i) hosts
+setExtraHosts _ c = c
+
+setNetworkAliases :: Array String -> TestContainer -> TestContainer
+setNetworkAliases aliases c@(GenericContainer i _) = setNetworkAliasesImpl c (GenericContainer i) aliases
+setNetworkAliases _ c = c
+
+setNetwork :: Network -> TestContainer -> TestContainer
+setNetwork n@(StartedNetwork _) c@(GenericContainer i _) = setNetworkImpl c (GenericContainer i) n
+setNetwork _ c = c
 
 -- | Get the mapped port for the running container
 getMappedPort :: ∀ m. MonadEffect m => Int -> TestContainer -> m (Either String Int)
