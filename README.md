@@ -81,7 +81,7 @@ Contributions are welcome, the project is still fresh and there's a lot to do!
 ## Features
 
 - [x] Basic containers management (start, stop, port forwarding, ...)
-- [ ] Network management (create, attach, delete)
+- [x] Network management (create, attach, delete)
 - [ ] Docker compose integration
 - [ ] Building of images
 
