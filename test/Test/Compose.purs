@@ -4,7 +4,7 @@ import Prelude
 
 import Control.Monad.Error.Class (class MonadThrow)
 import Data.Either (Either(..), isLeft, isRight)
-import Effect.Aff (Error, Milliseconds(..), delay)
+import Effect.Aff (Error)
 import Effect.Aff.Class (class MonadAff)
 import Partial.Unsafe (unsafePartial)
 import Test.Assertions (shouldInclude)
@@ -26,7 +26,6 @@ composeTest = do
       it "should be able to start a compose environment with specified services" $ do
         upped <- composeUpWithServices defaultEnvironment [ "redis" ]
         upped `shouldSatisfy` isRight
-        delay (Milliseconds 10_000.0) -- try to fix GitHub
 
         let dce = unsafePartial $ forceRight upped
         checkContainer dce "redis"
