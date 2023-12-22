@@ -14,7 +14,8 @@ jobs:
         with:
           node-version: 18
 
-      - run: |
+      - name: Install dependencies and build
+        run: |
           npm install
           npm install -g spago@next
           spago build
@@ -37,7 +38,8 @@ jobs:
         with:
           version: v2.23.1
  
-      - run: |
+      - name: Install dependencies and test
+        run: |
           docker --version
           docker-compose --version
           npm install
