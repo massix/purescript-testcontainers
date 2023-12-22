@@ -1,0 +1,8 @@
+version: '3.7'
+services:
+  alpine:
+    image: alpine:${ALPINE_TAG}
+    command: ["/bin/sh", "-c", "sleep infinity"]
+    environment:
+      SOMEVARIABLE: "${SOMEVARIABLE}"
+      QUOTEDVARIABLE: "${QUOTEDVARIABLE}"
