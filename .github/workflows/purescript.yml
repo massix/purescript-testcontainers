@@ -39,3 +39,5 @@ jobs:
       - run: npm install
       - run: npm install -g spago@next
       - run: spago test
+        env:
+          DEBUG: testcontainers:compose
