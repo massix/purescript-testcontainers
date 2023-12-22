@@ -13,9 +13,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install
-      - run: npm install -g spago@next
-      - run: spago build
+
+      - run: |
+          npm install
+          npm install -g spago@next
+          spago build
 
   test:
     runs-on: ubuntu-latest
@@ -34,10 +36,10 @@ jobs:
       - uses: ndeloof/install-compose-action@v0.0.1
         with:
           version: v2.23.1
-      - run: docker --version
-      - run: docker-compose --version
-      - run: npm install
-      - run: npm install -g spago@next
-      - run: spago test
-        env:
-          DEBUG: testcontainers:compose
+ 
+      - run: |
+          docker --version
+          docker-compose --version
+          npm install
+          npm install -g spago@next
+          spago test
