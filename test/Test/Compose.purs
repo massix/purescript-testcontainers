@@ -26,7 +26,7 @@ composeTest = do
       it "should be able to start a compose environment with specified services" $ do
         upped <- composeUpWithServices defaultEnvironment [ "redis" ]
         upped `shouldSatisfy` isRight
-        delay (Milliseconds 3000.0) -- try to fix GitHub
+        delay (Milliseconds 10_000.0) -- try to fix GitHub
 
         let dce = unsafePartial $ forceRight upped
         checkContainer dce "redis"
