@@ -1,0 +1,18 @@
+version: '3.7'
+services:
+  buildedRedis:
+    build:
+      tags: [ "builded-redis:latest" ]
+      context: .
+      dockerfile: ./Dockerfile.redis
+    image: builded-redis:latest
+  buildedNginx:
+    build:
+      tags: [ "builded-nginx:latest" ]
+      context: .
+      dockerfile: ./Dockerfile.nginx
+    ports:
+      - target: 80
+        published: 8080
+        protocol: tcp
+    image: builded-nginx:latest

@@ -1,0 +1,5 @@
+FROM redis:latest
+RUN echo "redis built from dockerfile" > /info.txt
+
+
+# vim:ft=dockerfile

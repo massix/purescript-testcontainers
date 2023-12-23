@@ -82,6 +82,6 @@ Contributions are welcome, the project is still fresh and there's a lot to do!
 
 - [x] Basic containers management (start, stop, port forwarding, ...)
 - [x] Network management (create, attach, delete)
-- [ ] Docker compose integration
+- [x] Docker compose integration
 - [ ] Building of images
 

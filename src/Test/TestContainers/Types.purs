@@ -13,6 +13,9 @@ module Test.TestContainers.Types
   , StartedNetwork
   , StoppedNetwork
   , GenericNetwork
+  , StoppedDockerComposeEnvironment
+  , StartedDockerComposeEnvironment
+  , CreatedDockerComposeEnvironment
   , NetworkId
   , NetworkName
   , ExtraHost
@@ -20,6 +23,7 @@ module Test.TestContainers.Types
   , IPCMode(..)
   , CopyContentToContainer(..)
   , TestContainer(..)
+  , DockerComposeEnvironment(..)
   , Image(..)
   , WaitStrategy(..)
   , class IsImage
@@ -70,6 +74,10 @@ foreign import data StoppedTestContainer :: Type
 foreign import data GenericNetwork :: Type
 foreign import data StoppedNetwork :: Type
 foreign import data StartedNetwork :: Type
+
+foreign import data StartedDockerComposeEnvironment :: Type
+foreign import data StoppedDockerComposeEnvironment :: Type
+foreign import data CreatedDockerComposeEnvironment :: Type
 
 data Capability
   = AuditControl
@@ -193,6 +201,16 @@ data Network
   = StartedNetwork StartedNetwork
   | StoppedNetwork StoppedNetwork
   | GenericNetwork GenericNetwork
+
+data DockerComposeEnvironment
+  = CreatedDockerComposeEnvironment FilePath (Array FilePath) CreatedDockerComposeEnvironment
+  | StartedDockerComposeEnvironment FilePath (Array FilePath) StartedDockerComposeEnvironment
+  | StoppedDockerComposeEnvironment FilePath (Array FilePath) StoppedDockerComposeEnvironment
+
+instance Show DockerComposeEnvironment where
+  show (CreatedDockerComposeEnvironment fp _ _) = "(CreatedDockerComposeEnvironment " <> fp <> ")"
+  show (StartedDockerComposeEnvironment fp _ _) = "(StartedDockerComposeEnvironment " <> fp <> ")"
+  show (StoppedDockerComposeEnvironment fp _ _) = "(StoppedDockerComposeEnvironment " <> fp <> ")"
 
 instance Show Network where
   show (StartedNetwork _) = "(StartedNetwork)"
