@@ -32,10 +32,10 @@ composeTest = do
         composeVersion <- getComposeVersion
         composeVersion `shouldSatisfy` \s -> startsWith "2" s
 
-      it "should be able to create a basic environment" $ do
+      it "should create a basic environment" $ do
         show defaultEnvironment `shouldEqual` "(CreatedDockerComposeEnvironment ./test/compose)"
 
-      it "should be able to start a compose environment with specified services" $ do
+      it "should start a compose environment with specified services" $ do
         upped <- composeUpWithServices defaultEnvironment [ "redis" ]
         upped `shouldSatisfy` isRight
 
@@ -52,7 +52,7 @@ composeTest = do
 
         void $ composeDown dce
 
-      it "should be able to start a compose environment with all services" $ do
+      it "should start a compose environment with all services" $ do
         upped <- composeUp defaultEnvironment
         upped `shouldSatisfy` isRight
 
@@ -62,14 +62,14 @@ composeTest = do
 
         void $ composeDown dce
 
-      it "should be possible to define wait strategies for containers" $ do
+      it "should define wait strategies for containers" $ do
         let waitEnv = setWaitStrategy [ LogOutput "Ready to accept connections tcp" 1 ] "redis-1" defaultEnvironment
         upped <- composeUp waitEnv
         upped `shouldSatisfy` isRight
         let env = unsafePartial $ forceRight upped
         checkContainer env "redis"
 
-      it "should be able to set pull policies correctly" $ do
+      it "should set pull policies correctly" $ do
         let pullEnv = setPullPolicy AlwaysPull defaultEnvironment
         let defaultEnv = setPullPolicy DefaultPolicy defaultEnvironment
         upped <- composeUp pullEnv
@@ -102,7 +102,7 @@ composeTest = do
             (\_ -> pure unit)
         void $ composeDown env'
 
-      it "should be able to rebuild images" $ do
+      it "should rebuild images" $ do
         upped <- composeUp $ setRebuild rebuildableEnvironment
         upped `shouldSatisfy` isRight
         let env = unsafePartial $ forceRight upped
@@ -119,7 +119,7 @@ composeTest = do
 
         void $ composeDown env
 
-      it "should be able to use profiles correctly" $ do
+      it "should use profiles correctly" $ do
         upped <- composeUp $ setProfiles [ "cache", "backend" ] profileEnvironment
         upped `shouldSatisfy` isRight
         let env = unsafePartial $ forceRight upped
@@ -150,7 +150,7 @@ composeTest = do
 
     describe "Environment" $ do
 
-      it "should be able to use environment variables from file" $ do
+      it "should use environment variables from file" $ do
         upped <- composeUp $ setEnvironmentFile ".env.custom" environmentFileEnvironment
         upped `shouldSatisfy` isRight
         let env = unsafePartial $ forceRight upped
@@ -165,7 +165,7 @@ composeTest = do
 
         void $ composeDown env
 
-      it "should be able to use environment variables from array" $ do
+      it "should use environment variables from array" $ do
         upped <- composeUp $ setEnvironment
           [ { key: "ALPINE_TAG", value: "latest" }
           , { key: "SOMEVARIABLE", value: "value from array" }
@@ -185,7 +185,7 @@ composeTest = do
             (\_ -> pure unit)
 
     describe "Utilities" $ do
-      it "should be able to 'bracket' the environment" $ do
+      it "should 'bracket' the environment" $ do
         res <- withCompose defaultEnvironment $ \dce -> do
           show dce `shouldEqual` "(StartedDockerComposeEnvironment ./test/compose)"
           checkContainer dce "redis"
@@ -196,7 +196,7 @@ composeTest = do
           Right _ -> pure unit
         pure unit
 
-      it "should be able to retrieve a container from the environment" $ do
+      it "should retrieve a container from the environment" $ do
         res <- withCompose defaultEnvironment $ \dce -> do
           res' <- withComposeContainer dce "redis-1" $ \cnt -> do
             execRes <- exec [ "whoami" ] cnt
