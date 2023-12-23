@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies and test
         run: |
           docker --version
-          docker compose --version
+          docker compose version
           npm install
           npm install -g spago@next
           spago test
