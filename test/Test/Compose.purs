@@ -6,7 +6,6 @@ import Control.Monad.Error.Class (class MonadThrow)
 import Control.Promise (Promise, toAffE)
 import Data.Either (Either(..), isLeft, isRight)
 import Data.String.Utils (startsWith)
-import Debug (trace)
 import Effect (Effect)
 import Effect.Aff (Aff, Error)
 import Effect.Aff.Class (class MonadAff)
@@ -31,7 +30,6 @@ composeTest = do
     describe "Up & Down" $ do
       it "should use compose version 2" $ do
         composeVersion <- getComposeVersion
-        trace composeVersion \_ -> pure unit
         composeVersion `shouldSatisfy` \s -> startsWith "2" s
 
       it "should be able to create a basic environment" $ do

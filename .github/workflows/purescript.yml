@@ -31,17 +31,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - uses: crazy-max/ghaction-setup-docker@v3.0.0
-        with:
-          version: v24.0.5
-      - uses: ndeloof/install-compose-action@v0.0.1
-        with:
-          version: v2.23.1
- 
       - name: Install dependencies and test
         run: |
           docker --version
-          docker-compose --version
+          docker compose --version
           npm install
           npm install -g spago@next
           spago test
