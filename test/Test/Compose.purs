@@ -3,8 +3,12 @@ module Test.Compose where
 import Prelude
 
 import Control.Monad.Error.Class (class MonadThrow)
+import Control.Promise (Promise, toAffE)
 import Data.Either (Either(..), isLeft, isRight)
-import Effect.Aff (Error)
+import Data.String.Utils (startsWith)
+import Debug (trace)
+import Effect (Effect)
+import Effect.Aff (Aff, Error)
 import Effect.Aff.Class (class MonadAff)
 import Partial.Unsafe (unsafePartial)
 import Test.Assertions (shouldInclude)
@@ -16,10 +20,20 @@ import Test.TestContainers.Compose (composeDown, composeUp, composeUpWithService
 import Test.TestContainers.Types (DockerComposeEnvironment(..), PullPolicy(..), WaitStrategy(..))
 import Test.Utils (launchCommand)
 
+foreign import composeVersionImpl :: Effect (Promise String)
+
+getComposeVersion :: Aff String
+getComposeVersion = toAffE composeVersionImpl
+
 composeTest :: Spec Unit
 composeTest = do
   describe "Compose" $ do
     describe "Up & Down" $ do
+      it "should use compose version 2" $ do
+        composeVersion <- getComposeVersion
+        trace composeVersion \_ -> pure unit
+        composeVersion `shouldSatisfy` \s -> startsWith "2" s
+
       it "should be able to create a basic environment" $ do
         show defaultEnvironment `shouldEqual` "(CreatedDockerComposeEnvironment ./test/compose)"
 
@@ -85,7 +99,7 @@ composeTest = do
         let env' = unsafePartial $ forceRight upped
         checkContainer env' "alpine"
         void $ withComposeContainer env' "alpine" \cnt -> do
-          launchCommand cnt [ "ls", "-l" , "/created-file" ]
+          launchCommand cnt [ "ls", "-l", "/created-file" ]
             (\s -> s `shouldInclude` "-rw-rw-rw-")
             (\_ -> pure unit)
         void $ composeDown env'
