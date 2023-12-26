@@ -15,7 +15,7 @@ import Test.Utils (launchCommand, mkAffContainer)
 networkTest :: Spec Unit
 networkTest = do
   describe "Network creation" $ do
-    it "should be able to create a network" $ do
+    it "should create a network" $ do
       startedNetwork <- startNetwork mkNetwork
       case startedNetwork of
         Left err -> fail err
@@ -38,7 +38,7 @@ networkTest = do
       realId `shouldSatisfy` ((/=) "")
 
   describe "Network utilisation" $ do
-    it "should be able to define extra hosts" $ do
+    it "should define extra hosts" $ do
       alpine <- mkAffContainer "alpine:latest" $
         setCommand [ "sleep", "infinity" ]
           <<< setExtraHosts
@@ -59,7 +59,7 @@ networkTest = do
         Left err -> fail err
         Right _ -> pure unit
 
-    it "should be able to use a network" $ do
+    it "should use a network" $ do
       commonNetwork <- startNetwork mkNetwork
       case commonNetwork of
         Left e -> fail e

@@ -12,7 +12,7 @@ import Test.Utils (mkAffContainer)
 
 networkModeTest :: Spec Unit
 networkModeTest = describe "Network Mode" $ do
-  it "should be able to set bridge network mode" $ do
+  it "should set bridge network mode" $ do
     cnt <- mkAffContainer "alpine:latest" $
       setNetworkMode (NetworkMode "bridge")
         <<< setCommand [ "sleep", "infinity" ]
@@ -24,7 +24,7 @@ networkModeTest = describe "Network Mode" $ do
       Left e -> throwError $ error e
       Right _ -> pure unit
 
-  it "should be able to set host network mode" $ do
+  it "should set host network mode" $ do
     cnt <- mkAffContainer "alpine:latest" $
       setNetworkMode (NetworkMode "host")
         <<< setCommand [ "sleep", "infinity" ]

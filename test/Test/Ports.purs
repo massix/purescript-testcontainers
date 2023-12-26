@@ -15,7 +15,7 @@ import Test.Utils (launchCommand)
 portMappingTest :: Spec Unit
 portMappingTest = do
   describe "Port Mappings" $ do
-    it "should be able to map ports" $ do
+    it "should map ports" $ do
       let
         nginx = mkContainer "nginx:alpine" # configure $ do
           setExposedPortsM [ 80 ]
@@ -39,7 +39,7 @@ portMappingTest = do
           (\s -> s `shouldEqual` "root\n")
           (\code -> code `shouldEqual` 0)
 
-    it "should be able to map multiple ports" $ do
+    it "should map multiple ports" $ do
       let
         redis = mkContainer "redis:latest" # configure $ do
           setExposedPortsM [ 6379, 6270 ]
