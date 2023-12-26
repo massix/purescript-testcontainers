@@ -13,8 +13,7 @@ import Test.Partials (forceRight)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual, shouldNotEqual, shouldSatisfy)
 import Test.Spec.Assertions.String (shouldStartWith)
-import Test.TestContainers (getFirstMappedPort, getHost, getId, getMappedPort, getName, mkContainer, setCommand, setUser, setWorkingDirectory, withContainer)
-import Test.TestContainers.Monad (configure, getContainer, setCommandM, setNameM, setPrivilegedModeM, setPullPolicyM)
+import Test.TestContainers (getFirstMappedPort, getHost, getId, getMappedPort, getName, setCommand, setName, setPrivilegedMode, setPullPolicy, setUser, setWorkingDirectory, withContainer)
 import Test.TestContainers.Types (PullPolicy(..))
 import Test.Utils (launchCommand, mkAffContainer)
 
@@ -22,14 +21,11 @@ basicTest :: Spec Unit
 basicTest = do
   describe "Basic stuff" $ do
     it "should launch a basic container" $ do
-      let
-        cnt = mkContainer "alpine:latest" # configure $ do
-          setCommandM [ "sleep", "360" ]
-          setPullPolicyM AlwaysPull
-          setNameM "sleeper" -- do not do this in production
-          setPrivilegedModeM
-          ret <- getContainer
-          pure ret
+      cnt <- mkAffContainer "alpine:latest" $
+        setCommand [ "sleep", "360" ]
+          <<< setPullPolicy AlwaysPull
+          <<< setName "sleeper"
+          <<< setPrivilegedMode
 
       void $ withContainer cnt $ \c -> do
         containerIdE <- liftEffect $ getId c

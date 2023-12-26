@@ -2,16 +2,14 @@ module Test.Entrypoint where
 
 import Prelude
 
-import Data.Either (Either(..), isRight)
+import Data.Either (Either(..))
 import Effect.Aff (error, throwError)
-import Partial.Unsafe (unsafePartial)
 import Test.Assertions (shouldInclude)
-import Test.Partials (forceRight)
 import Test.Spec (Spec, describe, it)
-import Test.Spec.Assertions (shouldSatisfy)
-import Test.TestContainers (exec, setCommand, setCopyFilesToContainer, setEntrypoint, withContainer)
+import Test.Spec.Assertions (shouldEqual)
+import Test.TestContainers (setCommand, setCopyFilesToContainer, setEntrypoint, withContainer)
 import Test.TestContainers.Types (CopyContentToContainer(..), FileMode(..))
-import Test.Utils (mkAffContainer)
+import Test.Utils (launchCommand, mkAffContainer)
 
 entrypointTest :: Spec Unit
 entrypointTest = describe "Test Entrypoint" $ do
@@ -22,11 +20,9 @@ entrypointTest = describe "Test Entrypoint" $ do
         <<< setCopyFilesToContainer [ FromSource "./test/docker-entrypoint.sh" "/docker-entrypoint.sh" (FileMode "0755") ]
 
     res <- withContainer sleeper $ \c -> do
-      execResult <- exec [ "ps" ] c
-      execResult `shouldSatisfy` isRight
-      let { output } = unsafePartial $ forceRight execResult
-
-      output `shouldInclude` "sleep 30"
+      launchCommand c [ "ps" ]
+        (\s -> s `shouldInclude` "sleep 30")
+        (\exitCode -> exitCode `shouldEqual` 0)
 
     case res of
       Left e -> throwError $ error e
