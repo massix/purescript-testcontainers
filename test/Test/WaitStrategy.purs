@@ -3,21 +3,19 @@ module Test.WaitStrategy (waitStrategyTest) where
 import Prelude
 
 import Data.DateTime.Instant (unInstant)
-import Data.Either (Either(..), isRight)
+import Data.Either (Either(..))
 import Data.String.Utils (includes)
 import Data.Time.Duration (Milliseconds(..))
 import Effect.Aff (error, throwError)
 import Effect.Class (liftEffect)
 import Effect.Now (now)
-import Partial.Unsafe (unsafePartial)
 import Test.Assertions (shouldInclude)
-import Test.Partials (forceRight)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual, shouldSatisfy)
-import Test.TestContainers (exec, setCommand, setExposedPorts, setStartupTimeout, setWaitStrategy, withContainer)
+import Test.TestContainers (setCommand, setExposedPorts, setStartupTimeout, setWaitStrategy, withContainer)
 import Test.TestContainers.Monad (setCommandM, setEnvironmentM, setStartupTimeoutM, setWaitStrategyM)
 import Test.TestContainers.Types (StartupTimeout(..), WaitStrategy(..))
-import Test.Utils (mkAffContainer, mkAffContainerM)
+import Test.Utils (launchCommand, mkAffContainer, mkAffContainerM)
 
 waitStrategyTest :: Spec Unit
 waitStrategyTest = describe "Wait Strategies" $ do
@@ -33,11 +31,9 @@ waitStrategyTest = describe "Wait Strategies" $ do
         setWaitStrategyM [ LogOutput "ready to accept connections" 2 ]
 
       res <- withContainer psql $ \c -> do
-        execResult <- exec [ "psql", "-U", "test", "-c", "SELECT true" ] c
-        execResult `shouldSatisfy` isRight
-
-        let { output } = unsafePartial $ forceRight execResult
-        output `shouldInclude` "(1 row)"
+        launchCommand c [ "psql", "-U", "test", "-c", "SELECT true" ]
+          (\s -> s `shouldInclude` "(1 row)")
+          (\exitCode -> exitCode `shouldEqual` 0)
 
       case res of
         Left e -> throwError $ error e

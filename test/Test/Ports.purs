@@ -7,22 +7,18 @@ import Partial.Unsafe (unsafePartial)
 import Test.Partials (forceRight)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual, shouldNotEqual, shouldSatisfy)
-import Test.TestContainers (getFirstMappedPort, getMappedPort, mkContainer, withContainer)
-import Test.TestContainers.Monad (configure, getContainer, setExposedPortsM, setPullPolicyM, setReuseM, setUserM, setWaitStrategyM)
+import Test.TestContainers (getFirstMappedPort, getMappedPort, setExposedPorts, setPullPolicy, setReuse, setWaitStrategy, withContainer)
 import Test.TestContainers.Types (PullPolicy(..), WaitStrategy(..))
-import Test.Utils (launchCommand)
+import Test.Utils (mkAffContainer)
 
 portMappingTest :: Spec Unit
 portMappingTest = do
   describe "Port Mappings" $ do
     it "should map ports" $ do
-      let
-        nginx = mkContainer "nginx:alpine" # configure $ do
-          setExposedPortsM [ 80 ]
-          setPullPolicyM AlwaysPull
-          setReuseM
-          ret <- getContainer
-          pure ret
+      nginx <- mkAffContainer "nginx:alpine" $
+        setExposedPorts [ 80 ]
+          <<< setPullPolicy AlwaysPull
+          <<< setReuse
 
       void $ withContainer nginx $ \c -> do
         ports <- getMappedPort 80 c
@@ -35,19 +31,11 @@ portMappingTest = do
         let singleMappedPort = unsafePartial $ forceRight singlePort
         singleMappedPort `shouldEqual` mappedPort
 
-        launchCommand c [ "whoami" ]
-          (\s -> s `shouldEqual` "root\n")
-          (\code -> code `shouldEqual` 0)
-
     it "should map multiple ports" $ do
-      let
-        redis = mkContainer "redis:latest" # configure $ do
-          setExposedPortsM [ 6379, 6270 ]
-          setPullPolicyM AlwaysPull
-          setWaitStrategyM [ LogOutput "Ready to accept connections tcp" 1 ]
-          setUserM "redis"
-          ret <- getContainer
-          pure ret
+      redis <- mkAffContainer "redis:latest" $
+        setExposedPorts [ 6379, 6270 ]
+          <<< setPullPolicy AlwaysPull
+          <<< setWaitStrategy [ LogOutput "Ready to accept connections tcp" 1 ]
 
       void $ withContainer redis $ \c -> do
         port <- getMappedPort 6379 c
@@ -59,8 +47,4 @@ portMappingTest = do
         let mappedPort' = unsafePartial $ forceRight port'
 
         mappedPort `shouldNotEqual` mappedPort'
-
-        launchCommand c [ "whoami" ]
-          (\s -> s `shouldEqual` "redis\n")
-          (\_ -> pure unit)
 

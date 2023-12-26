@@ -2,28 +2,28 @@ module Test.EnvironmentVariables where
 
 import Prelude
 
-import Data.Either (Either(..), isRight)
+import Data.Either (Either(..))
 import Effect.Aff (error, throwError)
-import Partial.Unsafe (unsafePartial)
 import Test.Assertions (shouldInclude)
-import Test.Partials (forceRight)
 import Test.Spec (Spec, describe, it)
-import Test.Spec.Assertions (shouldEqual, shouldSatisfy)
-import Test.TestContainers (exec, setCommand, setEnvironment, withContainer)
-import Test.Utils (mkAffContainer)
+import Test.Spec.Assertions (shouldEqual)
+import Test.TestContainers (setCommand, setEnvironment, withContainer)
+import Test.Utils (launchCommand, mkAffContainer)
 
 environmentTest :: Spec Unit
 environmentTest = describe "Environment Variables" $ do
   it "should set environment variables properly" $ do
-    sleeperContainer <- mkAffContainer "alpine:latest" $ setEnvironment env <<< setCommand [ "sleep", "360" ]
-    res <- withContainer sleeperContainer $ \c -> do
-      execResult <- exec [ "env" ] c
-      execResult `shouldSatisfy` isRight
+    sleeperContainer <- mkAffContainer "alpine:latest" $
+      setEnvironment env
+        <<< setCommand [ "sleep", "360" ]
 
-      let { output, exitCode } = unsafePartial $ forceRight execResult
-      output `shouldInclude` "SOME_VARIABLE=SOME_VALUE"
-      output `shouldInclude` "OTHER_VARIABLE=OTHER_VALUE"
-      exitCode `shouldEqual` 0
+    res <- withContainer sleeperContainer $ \c -> do
+      launchCommand c [ "env" ]
+        ( \s -> do
+            s `shouldInclude` "SOME_VARIABLE=SOME_VALUE"
+            s `shouldInclude` "OTHER_VARIABLE=OTHER_VALUE"
+        )
+        (\exitCode -> exitCode `shouldEqual` 0)
 
     case res of
       Left e -> throwError $ error e
