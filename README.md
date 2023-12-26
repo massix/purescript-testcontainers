@@ -13,15 +13,16 @@
 - [Containers](#containers)
   - [Create container](#create-container)
   - [Start a container](#start-a-container)
-  - [Stop a container](#stop-a-container)
-  - [Set a Wait Strategy](#set-a-wait-strategy)
-  - [Environment variables](#environment-variables)
-  - [Privileged Mode](#privileged-mode)
-  - [Capabilities](#capabilities)
-  - [Set User](#set-user)
-  - [Exec a command](#exec-a-command)
-  - [Use the withContainer helper](#use-the-withcontainer-helper)
-  - [Configure with a Monad](#configure-with-a-monad)
+  - [Configure a container](#configure-a-container)
+    - [Stop a container](#stop-a-container)
+    - [Set a Wait Strategy](#set-a-wait-strategy)
+    - [Environment variables](#environment-variables)
+    - [Privileged Mode](#privileged-mode)
+    - [Capabilities](#capabilities)
+    - [Set User](#set-user)
+    - [Exec a command](#exec-a-command)
+    - [Use the withContainer helper](#use-the-withcontainer-helper)
+    - [Configure with a Monad](#configure-with-a-monad)
 - [Network](#network)
   - [Create a network](#create-a-network)
   - [Attach a container to a network](#attach-a-container-to-a-network)
@@ -68,11 +69,38 @@ main = do
           Left err -> Console.logShow err
           Right { output, exitCode } -> do
             Console.log $ "ps output: " <> output <> ", exitCode: " <> show exitCode
+
+        void $ TC.stopContainer started
+```
+
+To avoid some of the `case _ of` a couple of common wrappers are provided. The
+code above can be rewritten as follows:
+
+```purescript
+module Main where
+
+import Prelude
+import Data.Either (Either(..))
+import Effect (Effect)
+import Effect.Aff (launchAff_)
+import Effect.Console as Console
+import Test.TestContainers as TC
+
+main :: Effect Unit
+main = do
+  launchAff_ $ do
+    let alpineContainer = TC.setCommand [ "sleep", "infinity" ] $ TC.mkContainer "alpine"
+    void $ TC.withContainer alpineContainer $ \started -> do
+      eitherExec <- TC.exec [ "ps" ] started
+      case eitherExec of
+        Left err -> Console.logShow err
+        Right { output, exitCode } -> do
+          Console.log $ "ps output: " <> output <> ", exitCode: " <> show exitCode
 ```
 
 This is to be considered as a _low-level_ library, hence it is not making use of
 complex monads transformers or anything, it's up to the users to define their own
-mtl stack if they need to.
+`mtl` stack if they need to.
 
 The library uses `Either String a` as a generic return value for almost all the
 operations, where `a` is the success type, depending on the function called,
@@ -102,38 +130,283 @@ feature are provided further down in the document.
 - [X] Set environment variables from files
 
 ## Local Development
-If you want to test the library locally, you just need to have the latest
-versions of `spago` and `purs` installed.
+If you want to test the library locally, you need to have:
+- the latest version of `spago` and `purs`
+- a running `docker` daemon
+- the `testcontainers` package installed from `npm`
+
+After cloning the repository locally, you can run the tests via
+`spago` by issuing the command: `spago test`.
 
 ### Nix
 For NixOS and nix users, a [flake.nix](./flake.nix) is provided, it uses the
-`purescript-overlay` to install the latest versions of `spago` and `purs`. If
-you use `direnv` you can simply `direnv allow .` to start a local development
-shell.
+`purescript-overlay` from `thomashoneyman` to install the latest versions of
+`spago` and `purs`. If you use `direnv` you can simply `direnv allow .` to
+start a local development shell.
+
+You will still need to install the `testcontainers` package from `npm` in your
+local environment on your own. Usually it is just a matter of running `npm
+install`
+
+**Warning**: since I only use a GNU/Linux environment, the `flake.nix` is
+configured only for `x86_64-linux` architecture. If you work on a different
+architecture or environment, feel free to modify the `flake.nix` file and send
+me a Pull Request.
 
 ## Containers
+The most basic building block of the library is the `container` entity. It
+allows users to create, start, interact and stop containers. It is most
+probably the entity you will use the most in your projects and it is the most
+complete one for this wrapper. A container is defined with the following
+union data:
+
+```purescript
+data TestContainer
+  = StartedTestContainer Image StartedTestContainer
+  | StoppedTestContainer Image StoppedTestContainer
+  | GenericContainer Image GenericContainer
+```
+
+Where `Image` is a `newtype` for a `String` object, defining a complete
+reference to a docker image (e.g. `redis:latest`).
+
+For convenience, a `Typeclass` is defined, which allows `String`s to be
+converted easily and used in place of the `newtype`:
+
+```purescript
+newtype Image = Image String
+
+class IsImage c where
+  toImage :: c -> Image
+
+instance IsImage Image where
+  toImage = identity
+
+instance IsImage String where
+  toImage = Image
+```
+
+Although the constructors for the `TestContainer` data are public, you are
+**strongly advised** to refrain from using them directly and instead use the
+provided _smart constructor_ `mkContainer`, which has the following signature:
+
+```purescript
+mkContainer :: ∀ a. IsImage a => a -> TestContainer
+```
+
+The reason why, is because the underlying definition uses some `foreign data`
+which represent *stateful* JavaScript objects used by the `Testcontainers`
+library directly. All the intricacies of the original library are handled
+"transparently" by the wrapper.
 
 ### Create container
+As stated above, creating a container is as simple as calling the `mkContainer`
+function, providing a valid definition of a docker image. The definition can
+either be a local image or a remote one, it will use the docker daemon to solve
+the reference, so by default (and in most standard installations of docker) it
+will search for the image on `docker.io` hub.
+
+#### Example
+```purescript
+-- Create a container for postgresql, version 14 and the alpine variant
+mkContainer (Image "postgres:14-alpine")
+
+-- Since the 'mkContainer' function expects a typeclass IsImage, the same
+-- can be written as follows
+mkContainer "postgres:14-alpine"
+```
+
 
 ### Start a container
+Once you have your container, you can start it by calling the `startContainer`
+function, for which the signature is the following:
+```purescript
+startContainer :: ∀ m. MonadAff m => TestContainer -> m (Either String TestContainer)
+```
+
+This function has some **side effects**, hence it expects to be run inside of
+an asynchronous monad (the `Aff` monad). It will return an `Either` value,
+containing either an error message - already converted to a string - or a
+`StartedTestContainer` value.
+
+#### Example
+This is the most basic example of starting a container inside of the `Aff`
+monad itself.
+```purescript
+testContainer :: Aff Unit
+testContainer = do
+  started <- startContainer $ mkContainer "redis:latest"
+  -- do something with the container
+  void $ stopContainer started
+```
+
+You can also use the `Effect` monad by launching an `Aff` computation inside:
+```purescript
+testContainer :: Effect Unit
+testContainer = launchAff_ $
+    void $ stopContainer (startContainer $ mkContainer "redis:latest")
+```
+
 
 ### Stop a container
+Similar to while starting a container, you can stop it by calling the
+`stopContainer` function, which has the following signature:
+```purescript
+stopContainer :: ∀ m. MonadAff m => TestContainer -> m (Either String TestContainer)
+```
 
-### Set a Wait Strategy
+Just like the `startContainer` function, this function has **side-effects**,
+hence it expects to be run inside of an asynchronous monad.
 
-### Environment variables
+### Configuring the container
+For configuring the containers I wanted to provide a similar experience to what
+is provided by the original library, for this reason all the functions which
+interact with the setup of the container share the same signature:
 
-### Privileged Mode
+```purescript
+configureSomething :: SomeParameter -> TestContainer -> TestContainer
+```
 
-### Capabilities
+This will allow you to take advantage of the __partial application__, one of the
+main advantages of curried functions in functional programming and compose all
+the configuration functions together, for example:
 
-### Set User
+```purescript
+configureContainer :: TestContainer -> TestContainer
+configureContainer =
+  setEnvironment env
+    <<< setUser "root"
+    <<< setThis "that" "andThat"
+    <<< setWaitStrategy [ SomeWaitStrategy ]
 
-### Exec a command
+main :: Effect Unit
+main =
+  let 
+    container = configureContainer $ mkContainer "redis:latest"
+  in do
+    startContainer container
+    --- etc
+```
 
-### Use the `withContainer` helper
+#### Port Mapping
+Most of the times, when you want to test something with docker is a service
+which will be exposed via some standard TCP or UDP ports. The most basic
+configuration function is then to `map` those ports to a localhost port, in
+order to be able to access the exposed service from the host machine.
 
-### Configure with a Monad
+The signature of the function is:
+```purescript
+setExposedPorts :: Array Int -> TestContainer -> TestContainer
+```
+
+**Warning**: by default, `Testcontainers` will not expose the same port to the
+host, this is to make it possible to run multiple tests in parallel, once you
+have set the `exposedPorts` you will need to retrieve the real ports exposed
+using one of the `getMappedPort` functions:
+```purescript
+getMappedPort :: ∀ m. MonadEffect m => Int -> TestContainer -> m (Either String Int)
+getFirstMappedPort :: ∀ m. MonadEffect m => TestContainer -> m (Either String Int)
+```
+
+These functions only work on **started containers**.
+
+##### Example
+```purescript
+testRedis :: Aff Unit
+testRedis = do
+  started <- startContainer $ setExposedPort [ 6379 ] $ mkContainer "redis:latest"
+  exposedPort <- liftEffect $ getMappedPort 6379 started
+  -- now do something with the exposed port
+```
+
+When a container only exposes a single port, as per the example above, you can
+use the `getFirstMappedPort` function:
+```purescript
+testRedis :: Aff Unit
+testRedis = do
+  started <- startContainer $ setExposedPort [ 6379 ] $ mkContainer "redis:latest"
+  exposedPort <- liftEffect $ getFirstMappedPort started
+  -- now do something with the exposed port
+```
+
+
+#### Set a Wait Strategy
+Waiting strategies are a mechanism used internally by `Testcontainers` to know
+when a container is to be considered as _available_ for the rest of the code.
+
+When setting a Wait Strategy, the library will block the execution of the code
+until either the `Timeout` is reached or the Wait Strategy is satisfied.
+
+Wait strategies are **always blocking** and you should **never bypass** them,
+since some functionalities (port forwarding for example) won't be available
+until the strategy is satisfied.
+
+The signature of the function is:
+```purescript
+setWaitStrategy :: Array WaitStrategy -> TestContainer -> TestContainer
+```
+
+And `WaitStrategy` is a union data type that represents the different ways to
+wait, almost all of the strategies defined by the original library are
+implemented:
+
+```purescript
+data WaitStrategy
+  = ListeningPorts -- ^ Default waiting strategy, wait for the exposed ports to be available
+  | LogOutput String Int -- ^ Look in the logs for the provided String to appear at least Int times
+  | HealthCheck -- ^ Wait until the health check is healthy
+  | HttpStatusCode String Int Int -- ^ Wait until the Http request at the path String and port Int returns the statuscode Int
+  | HttpResponsePredicate String Int (String -> Boolean) -- ^ Similar to above, but instead of the statuscode, a predicate is required
+  | ShellCommand String -- ^ Run the provided shell command and wait until it returns exit code 0
+```
+
+##### ListeningPorts
+This is the most basic and default WaitStrategy implemented by
+`Testcontainers`. When you use the `setExposedPort` function (described
+[here](#port-mapping)) it will wait until the exposed port is available. This
+is done with some heuristics and while it is accurate most of the time,
+sometimes it won't work properly, especially if the container is restarting
+internally (for example `postgres` containers tend to start the server multiple
+times while doing the initial setup). This strategy is always active and
+there are no configuration parameters to configure it.
+
+##### LogOutput
+This Wait Strategy will wait for some string to appear in the container's logs
+the number of times defined by the constructor.
+
+The provided string will be treated as a **regular expression** by the
+underlying library.
+
+###### Example
+```purescript
+testPostgre :: Aff Unit
+testPostgre = do
+  let config = setExposedPort [ 5432 ]
+    <<< setWaitStrategy [ LogOutput "database system is ready to accept connections" 2 ]
+      -- ^ postgresql will restart after the initial configuration, we know that the
+      -- service is ready only when that line has appeared twice
+  started <- startContainer $ config $ mkContainer "postgres:14-alpine"
+  -- do something with postgresql container
+```
+
+##### HealthCheck
+This Wait Strategy will wait until the health check defined in the `Dockerfile`
+of the image is healthy. In the original library there is a way to define a
+custom `HealthCheck`, but this has not been implemented in this wrapper yet.
+
+#### Environment variables
+
+#### Privileged Mode
+
+#### Capabilities
+
+#### Set User
+
+#### Exec a command
+
+#### Use the `withContainer` helper
+
+#### Configure with a Monad
 
 ## Network
 
