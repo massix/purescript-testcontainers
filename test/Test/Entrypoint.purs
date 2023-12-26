@@ -15,7 +15,7 @@ import Test.Utils (mkAffContainer)
 
 entrypointTest :: Spec Unit
 entrypointTest = describe "Test Entrypoint" $ do
-  it "should be able to override the entrypoint" $ do
+  it "should override the entrypoint" $ do
     sleeper <- mkAffContainer "alpine:latest" $
       setEntrypoint [ "/docker-entrypoint.sh" ]
         <<< setCommand [ "30" ]

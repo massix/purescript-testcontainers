@@ -23,7 +23,7 @@ waitStrategyTest :: Spec Unit
 waitStrategyTest = describe "Wait Strategies" $ do
 
   describe "Log Based" $ do
-    it "should be able to wait for a line of log to appear twice" $ do
+    it "should wait for a line of log to appear twice" $ do
       psql <- mkAffContainerM "postgres:14-alpine" $ do
         setEnvironmentM psqlEnv
 
@@ -43,7 +43,7 @@ waitStrategyTest = describe "Wait Strategies" $ do
         Left e -> throwError $ error e
         Right _ -> pure unit
 
-    it "should be able to wait for a certain amount of time" $ do
+    it "should wait for a certain amount of time" $ do
       rightNow <- liftEffect now
       sleeper <- mkAffContainerM "alpine:latest" $ do
         setCommandM [ "sleep", "360" ]
@@ -65,7 +65,7 @@ waitStrategyTest = describe "Wait Strategies" $ do
         Right _ -> throwError $ error "I was expecting an error!"
 
   describe "HTTP Based" $ do
-    it "should be able to wait for an http code" $ do
+    it "should wait for an http code" $ do
       rightNow <- liftEffect now
       nginx <- mkAffContainer "nginx:latest" $
         -- For HttpStatusCode to work we have to expose that port
@@ -81,7 +81,7 @@ waitStrategyTest = describe "Wait Strategies" $ do
         Left e -> throwError $ error e
         Right _ -> pure unit
 
-    it "should be able to parse the body of an http request" $ do
+    it "should parse the body of an http request" $ do
       rightNow <- liftEffect now
       nginx <- mkAffContainer "nginx:latest" $
         setWaitStrategy [ HttpResponsePredicate "/" 80 checkHttpBody ]
@@ -97,7 +97,7 @@ waitStrategyTest = describe "Wait Strategies" $ do
         Right _ -> pure unit
 
   describe "Shell commands" $ do
-    it "should be able to wait for a shell command output" $ do
+    it "should wait for a shell command output" $ do
       rightNow <- liftEffect now
       sleeper <- mkAffContainer "alpine:latest" $
         setWaitStrategy [ ShellCommand "sleep 3" ]
