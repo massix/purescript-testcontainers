@@ -1,87 +1,167 @@
-# Purescript-TestContainers
+# Testcontainers for PureScript
 
 ![Tests](https://github.com/massix/purescript-testcontainers/actions/workflows/purescript.yml/badge.svg)
 
-## Description
-This is my first attempt at creating a library for PureScript.
+![Testcontainers Logo](https://testcontainers.com/images/testcontainers-logo.svg)
 
-It is still a work in progress, but some functionalities are there already, it might
-cover some of the use-cases (creating a container, executing commands, opening ports)
-when integration testing, for example creating a PostgreSQL container and connecting
-to it.
+## Table of contents
 
-The [test] folder contains some very basic examples.
+- [Introduction](#introduction)
+- [Quick example](#quick-example)
+- [Features](#features)
+- [Local Development](#local-development)
+- [Containers](#containers)
+  - [Create container](#create-container)
+  - [Start a container](#start-a-container)
+  - [Stop a container](#stop-a-container)
+  - [Set a Wait Strategy](#set-a-wait-strategy)
+  - [Environment variables](#environment-variables)
+  - [Privileged Mode](#privileged-mode)
+  - [Capabilities](#capabilities)
+  - [Set User](#set-user)
+  - [Exec a command](#exec-a-command)
+  - [Use the withContainer helper](#use-the-withcontainer-helper)
+  - [Configure with a Monad](#configure-with-a-monad)
+- [Network](#network)
+  - [Create a network](#create-a-network)
+  - [Attach a container to a network](#attach-a-container-to-a-network)
+- [Docker Compose](#docker-compose)
 
+## Introduction
+[Testcontainers](https://testcontainers.com/) is an **opensource framework**
+for providing throwaway, lightweight instances of databases, message brokers,
+web browsers, or just about **anything that can run in a Docker container**.
 
-## Usage
-In order to use this library you need to install `testcontainers` using node in your
-environment:
+No more need for mocks or complicated environment configurations.
+**Define your test dependencies as code**, then simply run your tests and
+containers will be created and then deleted.
 
-    $ npm install testcontainers
+With support for many languages and testing frameworks,
+**all you need is Docker**.
 
-After that, you need to install this library in your project, it can be done quite
-easily if using `spago@next`, simply modify the workspace section of the `spago.yaml`
-file and add this GitHub repository as a remote source.
-
-If you're using older versions of spago, it might be more difficult and I honestly
-do not know how to do it (PRs are welcome!).
-
-## Basic Examples
-
-### Start a PostgreSQL container and connect to it using
+## Quick example
+A lot of examples are in the [tests folder](./test/Test/), but since we all
+love to see some code from time to time, here is a very quick example on how to
+launch an `alpine` container and execute the `ps` command in it, checking the
+result:
 
 ```purescript
-module TestPostgreSQL where
+module Main where
+
 import Prelude
+import Data.Either (Either(..))
 import Effect (Effect)
+import Effect.Aff (launchAff_)
+import Effect.Console as Console
 import Test.TestContainers as TC
-import Test.TestContainers.Types as TC
-import Yoga.Postgres as YP
 
 main :: Effect Unit
 main = do
-  TC.withContainer mkPostgreSQLContainer $ \container -> do
-    liftEffect $ "PostgreSQL container started: " <> show container
-    { host, port } <- liftEffect $ do
-      host <- TC.getHost container
-      port <- TC.getFirstMappedPort container
-      pure { host, port }
-
-    pool <- YG.mkPool $ mkConnection host port
-
-    launchAff_ $ do
-      withClient pool $ \c -> do
-        YG.execute_ (YG.Query "create table t (id int)") c
-
-  where
-  mkPostgreSQLContainer :: TC.TestContainer
-  mkPostgreSQLContainer =
-    TC.mkContainer "postgres:latest" $
-      TC.setExposedPorts [ 5432 ] <<<
-
-      -- PostgreSQL container will output this string twice while starting
-      -- The first one is before creating the database, the second one is the real one
-      TC.setWaitStrategy [ (TC.LogOutput "database system is ready to accept connections" 2) ] <<<
-      TC.setEnvironment
-        [ { key: "POSTGRES_DB", value: "test" }
-        , { key: "POSTGRES_USER", value: "test" }
-        , { key: "POSTGRES_PASSWORD", value: "test" }
-        ]
-
-  mkConnection :: String -> Int -> YG.ConnectionInfo
-  mkConnection host port = YG.connectionInfoFromString $ "postgres://" <> host <> ":" <> show port <> "/test"
+  launchAff_ $ do
+    let alpineContainer = TC.setCommand [ "sleep", "infinity" ] $ TC.mkContainer "alpine"
+    eitherStarted <- TC.startContainer alpineContainer
+    case eitherStarted of
+      Left err -> Console.logShow err
+      Right started -> do
+        eitherExec <- TC.exec [ "ps" ] started
+        case eitherExec of
+          Left err -> Console.logShow err
+          Right { output, exitCode } -> do
+            Console.log $ "ps output: " <> output <> ", exitCode: " <> show exitCode
 ```
 
+This is to be considered as a _low-level_ library, hence it is not making use of
+complex monads transformers or anything, it's up to the users to define their own
+mtl stack if they need to.
 
-## Contributions
-
-Contributions are welcome, the project is still fresh and there's a lot to do!
-
-
+The library uses `Either String a` as a generic return value for almost all the
+operations, where `a` is the success type, depending on the function called,
+and `String` is to return the errors coming from the underlying FFI interface.
 ## Features
+Not all the features of the original Testcontainers library have been
+implemented yet, I plan to cover 100% of the functionalities but it will take
+some time to develop everything.
 
-- [x] Basic containers management (start, stop, port forwarding, ...)
-- [x] Network management (create, attach, delete)
-- [x] Docker compose integration
-- [ ] Building of images
+For now, this is a list of the supported features, more details for each
+feature are provided further down in the document.
+
+- [X] Creation of containers
+- [X] Basic handling (start/stop) of containers
+- [X] Define wait strategies
+- [X] Start in privileged mode
+- [X] Start with capabilities (enable or disabled)
+- [X] Handle users
+- [X] Launch commands inside of containers
+- [X] Create a network
+- [X] Attach containers to a network
+- [X] Use `docker-compose` definitions
+- [X] Up and down of a compose environment
+- [X] Get containers running in a compose environment
+- [X] Start containers based on a profile
+- [X] Rebuild containers automatically
+- [X] Set environment variables from files
+
+## Local Development
+If you want to test the library locally, you just need to have the latest
+versions of `spago` and `purs` installed.
+
+### Nix
+For NixOS and nix users, a [flake.nix](./flake.nix) is provided, it uses the
+`purescript-overlay` to install the latest versions of `spago` and `purs`. If
+you use `direnv` you can simply `direnv allow .` to start a local development
+shell.
+
+## Containers
+
+### Create container
+
+### Start a container
+
+### Stop a container
+
+### Set a Wait Strategy
+
+### Environment variables
+
+### Privileged Mode
+
+### Capabilities
+
+### Set User
+
+### Exec a command
+
+### Use the `withContainer` helper
+
+### Configure with a Monad
+
+## Network
+
+### Create a network
+
+### Attach a container to a network
+
+## Docker Compose
+
+### Create an environment
+
+### Up an environment
+
+### Down an environment
+
+### Use the `withCompose` helper
+
+### Get a container from the environment
+
+### Set Wait strategies for containers
+
+### Use Profiles
+
+### Automatically rebuild
+
+### Use Environment variables
+
+#### From files
+
+#### From Code
 
