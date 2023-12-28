@@ -314,7 +314,7 @@ These functions only work on **started containers**.
 ```purescript
 testRedis :: Aff Unit
 testRedis = do
-  started <- startContainer $ setExposedPort [ 6379 ] $ mkContainer "redis:latest"
+  started <- startContainer $ setExposedPorts [ 6379 ] $ mkContainer "redis:latest"
   exposedPort <- liftEffect $ getMappedPort 6379 started
   -- now do something with the exposed port
 ```
@@ -324,7 +324,7 @@ use the `getFirstMappedPort` function:
 ```purescript
 testRedis :: Aff Unit
 testRedis = do
-  started <- startContainer $ setExposedPort [ 6379 ] $ mkContainer "redis:latest"
+  started <- startContainer $ setExposedPorts [ 6379 ] $ mkContainer "redis:latest"
   exposedPort <- liftEffect $ getFirstMappedPort started
   -- now do something with the exposed port
 ```
@@ -362,7 +362,7 @@ data WaitStrategy
 
 ##### ListeningPorts
 This is the most basic and default WaitStrategy implemented by
-`Testcontainers`. When you use the `setExposedPort` function (described
+`Testcontainers`. When you use the `setExposedPorts` function (described
 [here](#port-mapping)) it will wait until the exposed port is available. This
 is done with some heuristics and while it is accurate most of the time,
 sometimes it won't work properly, especially if the container is restarting
@@ -381,7 +381,7 @@ underlying library.
 ```purescript
 testPostgre :: Aff Unit
 testPostgre = do
-  let config = setExposedPort [ 5432 ]
+  let config = setExposedPorts [ 5432 ]
     <<< setWaitStrategy [ LogOutput "database system is ready to accept connections" 2 ]
       -- ^ postgresql will restart after the initial configuration, we know that the
       -- service is ready only when that line has appeared twice
@@ -393,6 +393,49 @@ testPostgre = do
 This Wait Strategy will wait until the health check defined in the `Dockerfile`
 of the image is healthy. In the original library there is a way to define a
 custom `HealthCheck`, but this has not been implemented in this wrapper yet.
+
+##### HttpStatusCode
+This Wait strategy will wait for a specific HttpStatusCode to be returned on
+the given path and at the given port.
+
+The constructor takes 3 parameters, the first one is the `path`, the second is
+the `port` and the third is the expected `status code`.
+
+**WARNING**: in order for this wait strategy to work, you have to
+[map a port before](#port-mapping), otherwise the underlying system won't be
+able to trigger the HTTP call.
+
+###### Example
+```purescript
+main :: Effect Unit
+main = launchAff_ $ do
+  upped <- startContainer (setWaitStrategy [ HttpStatusCode "/" 80 200 ] <<< setExposedPorts [ 80 ] $ mkContainer "nginx:alpine")
+  -- do something with the container
+  void $ stopContainer
+```
+
+##### HttpResponsePredicate
+Similar to the [HttpStatusCode](#httpstatuscode), this Wait Strategy will
+interact with the underlying container via HTTP. The constructor takes 3
+parameters: the `path` where to send the HTTP request to, the `port` and a
+function which takes a `String` and returns a `Boolean`, the `String` is the
+raw HTTP body returned by the service. The service is considered to be ready
+if the predicate returns `true`.
+
+###### Example
+```purescript
+main :: Aff Unit
+main = do
+  let config = 
+    setWaitStrategy [ HttpResponsePredicate "/" 80 (\s -> "welcome to nginx" `includes` s) ]
+      <<< setExposedPorts [ 80 ]
+
+  started <- startContainer (config $ mkContainer "nginx:alpine")
+  -- do something with it
+  void $ stopContainer started
+```
+
+##### ShellCommand
 
 #### Environment variables
 
