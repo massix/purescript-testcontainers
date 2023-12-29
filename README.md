@@ -360,6 +360,18 @@ data WaitStrategy
   | ShellCommand String -- ^ Run the provided shell command and wait until it returns exit code 0
 ```
 
+##### Configuring the timeout
+The timeout for the wait strategies listed below is configurable using the function
+```purescript
+newtype StartupTimeout = StartupTimeout Int
+setStartupTimeout :: StartupTimeout -> TestContainer -> TestContainer
+```
+
+By default is set to 60 seconds, if the timeout is reached before the
+successful completion of the defined wait strategy then the container is
+immediately stopped and the `startContainer` function will return with an error
+(i.e. `Left String`)
+
 ##### ListeningPorts
 This is the most basic and default WaitStrategy implemented by
 `Testcontainers`. When you use the `setExposedPorts` function (described
@@ -436,16 +448,129 @@ main = do
 ```
 
 ##### ShellCommand
+This final constructor is `ShellCommand`, it takes a single parameter which is
+a shell script to be periodically launched inside the container. It will stop
+when either one of the following conditions is met:
+- the timeout occurs (see [configuring the timeout](#configuring-the-timeout)
+- the shell script completes successfully (i.e. its exit code is 0)
 
 #### Environment variables
+It is possible to inject environment variables inside the container using the
+function:
+```purescript
+type KV = { key :: String, value :: String }
+setEnvironment :: Array KV -> TestContainer -> TestContainer
+```
+
+The variables will be available immediately, it is the exact equivalent to the
+flag `-e` of the `docker run` command.
 
 #### Privileged Mode
+If you need your container to run in `privileged` mode, you can do so with the
+function
+```purescript
+setPrivilegedMode :: TestContainer -> TestContainer
+```
+
+Equivalent to the `--privileged` flag of `docker run`.
 
 #### Capabilities
+All the Linux capabilities can be added or removed before starting the container,
+this is the list of the constructors.
+
+**WARNING**: not all of them have been tested!
+
+```purescript
+data Capability
+  = AuditControl
+  | AuditRead
+  | AuditWrite
+  | BlockSuspend
+  | BPF
+  | CheckpointRestore
+  | Chown
+  | DACOverride
+  | DACReadSearch
+  | FOwner
+  | FSetID
+  | IPCLock
+  | IPCOwner
+  | Kill
+  | Lease
+  | LinuxImmutable
+  | MACAdmin
+  | MACOverride
+  | MkNod
+  | NetAdmin
+  | NetBindService
+  | NetBroadcast
+  | NetRaw
+  | PerfMon
+  | SetGid
+  | SetFCap
+  | SetPCap
+  | SetUid
+  | SysAdmin
+  | SysBoot
+  | SysChroot
+  | SysModule
+  | SysNice
+  | SysPAcct
+  | SysPTrace
+  | SysRawIO
+  | SysResource
+  | SysTime
+  | SysTtyConfig
+  | WakeAlarm
+```
+
+Two functions are available to add or remove a capability:
+```purescript
+setAddedCapabilities :: Array Capability -> TestContainer -> TestContainer
+setDroppedCapabilities :: Array Capability -> TestContainer -> TestContainer
+```
 
 #### Set User
+It is also possible to change the default user of the container:
+```purescript
+setUser :: User -> TestContainer -> TestContainer
+```
+#### Set Command
+It is possible to set the command to be launched upon starting the container, this
+is passed to the `entrypoint` of the configured underlying container (if any)
+```purescript
+setCommand :: Array String -> TestContainer -> TestContainer
+```
+
 
 #### Exec a command
+Once a container is started, you can `exec` commands inside using the
+following function:
+```purescript
+type ExecResult = { output :: String, exitCode :: Int }
+exec :: ∀ m. MonadAff m => Array String -> TestContainer -> m (Either String ExecResult)
+```
+
+The `Array String` parameter is passed directly to `execve` so it has to
+conform to that standard.
+
+
+##### Example
+```purescript
+execCommandTest :: Aff Unit
+execCommandTest = do
+  cnt <- startContainer (setCommand [ "sleep", "infinity" ] $ mkContainer "alpine:latest")
+  case cnt of
+    Right c -> do
+      execResultE <- exec [ "ls", "/" ] cnt
+      case execResultE of
+        Right { output, exitCode } -> do
+          -- do something with output and exitCode
+          pure unit
+        Left _ -> pure unit
+    Left _ -> pure unit
+```
+
 
 #### Use the `withContainer` helper
 
