@@ -20,6 +20,7 @@
     - [Privileged Mode](#privileged-mode)
     - [Capabilities](#capabilities)
     - [Set User](#set-user)
+    - [Set Command](#set-command)
     - [Exec a command](#exec-a-command)
     - [Use the withContainer helper](#use-the-withcontainer-helper)
     - [Configure with a Monad](#configure-with-a-monad)
@@ -541,6 +542,8 @@ is passed to the `entrypoint` of the configured underlying container (if any)
 ```purescript
 setCommand :: Array String -> TestContainer -> TestContainer
 ```
+
+(An example is provided in the following paragraph)
 
 
 #### Exec a command
