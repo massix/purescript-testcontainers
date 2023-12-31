@@ -10,12 +10,21 @@
 - [Quick example](#quick-example)
 - [Features](#features)
 - [Local Development](#local-development)
+  - [Nix](#nix)
 - [Containers](#containers)
   - [Create container](#create-container)
   - [Start a container](#start-a-container)
-  - [Configure a container](#configure-a-container)
-    - [Stop a container](#stop-a-container)
+  - [Stop a container](#stop-a-container)
+  - [Configuring the container](#configuring-the-container)
+    - [Port Mapping](#port-mapping)
     - [Set a Wait Strategy](#set-a-wait-strategy)
+      - [Configuring the timeout](#configuring-the-timeout)
+      - [ListeningPorts](#listeningports)
+      - [LogOutput](#logoutput)
+      - [HealthCheck](#healthcheck)
+      - [HttpStatusCode](#httpstatuscode)
+      - [HttpResponsePredicate](#httpresponsepredicate)
+      - [ShellCommand](#shellcommand)
     - [Environment variables](#environment-variables)
     - [Privileged Mode](#privileged-mode)
     - [Capabilities](#capabilities)
@@ -23,11 +32,22 @@
     - [Set Command](#set-command)
     - [Exec a command](#exec-a-command)
     - [Use the withContainer helper](#use-the-withcontainer-helper)
-    - [Configure with a Monad](#configure-with-a-monad)
 - [Network](#network)
   - [Create a network](#create-a-network)
+  - [Start a network](#start-a-network)
   - [Attach a container to a network](#attach-a-container-to-a-network)
 - [Docker Compose](#docker-compose)
+  - [Create an environment](#create-an-environment)
+  - [Up an environment](#up-an-environment)
+  - [Down an environment](#down-an-environment)
+  - [Use the `withCompose` helper](#use-the-withcompose-helper)
+  - [Get a container from the environment](#get-a-container-from-the-environment)
+  - [Set Wait strategies for containers](#set-wait-strategies-for-containers)
+  - [Use Profiles](#use-profiles)
+  - [Automatically rebuild](#automatically-rebuild)
+  - [Use Environment variables](#use-environment-variables)
+    - [From files](#from-files)
+    - [From Code](#from-code)
 
 ## Introduction
 [Testcontainers](https://testcontainers.com/) is an **opensource framework**
@@ -576,14 +596,113 @@ execCommandTest = do
 
 
 #### Use the `withContainer` helper
+To make it easier to interact with containers, and to avoid the hassle of
+having to either `start` and `stop` them on your own or to `bracket` somehow, a
+function is provided:
+```purescript
+withContainer :: ∀ m a. (MonadAff m) => TestContainer -> (TestContainer -> m a) -> m (Either String a)
+```
 
-#### Configure with a Monad
+This function takes a `GenericContainer` as first parameter, a function acting
+with it as the second parameter and returns an `Either` of a `String` (the
+default error type) or the result of the executed action.
+
+##### Example
+```purescript
+testWithContainer :: Aff Unit
+testWithContainer = do
+  let cnt = setCommand [ "sleep", "infinity" ] $ mkContainer "alpine:latest"
+  res <- withContainer cnt $ \c -> do
+    exec [ "ls", "/" ] c
+
+  case res of
+    Left e -> Console.log $ "An error occured: " <> e
+    Right { output, exitCode } -> do
+      Console.log $ "Exec output: " <> output <> ", exitCode: " <> show exitCode
+```
+
+The snippet above will start and stop the container automatically, after the
+`exec` of the `ls /` command.
+
 
 ## Network
+This library provides a couple of function for creating, handling and attaching
+networks to containers. This will allow you to create separated services and to
+allow those services to communicate with each other easily.
+
+As usual, the [test folder](./test/Test/Network.purs) contains some integration
+tests which will tell you how to use those functions.
 
 ### Create a network
+Creating a network is similar to the [creation of a
+container](#create-container), although the constructor is public, it is better
+to use the *smart constructor* defined as follows:
+```purescript
+mkNetwork :: Network
+```
+
+The smart constructor takes no parameter and will create a `GenericNetwork`.
+
+### Start a network
+Once you have created your network, and before being able to attach it to
+existing containers, you **must** start it using the following function:
+```purescript
+startNetwork :: ∀ m. MonadAff m => Network -> m (Either String Network)
+```
+
+This will return you a `StartedNetwork` or a `String` with an error message.
+
+Please not that **the network is stopped automatically** by Testcontainers when
+it is no longer used.
 
 ### Attach a container to a network
+With a [`StartedNetwork`](#start-a-network), you can attach containers to it
+using the following function:
+```purescript
+setNetwork :: Network -> TestContainer -> TestContainer
+```
+
+You can attach multiple containers to the network, it is also advised to use
+the `setNetworkAliases` function in order to be able to refer to other
+containers in the same network using an easy-to-remember name:
+```purescript
+setNetworkAliases :: Array String -> TestContainer -> TestContainer
+```
+
+#### Example
+```purescript
+networkTest :: Aff Unit
+networkTest = do
+  commonNetwork <- startNetwork mkNetwork
+  case commonNetwork of
+    Left e -> Console.log $ "Error: " <> e
+    Right network -> do
+      firstAlpine <- mkAffContainer "alpine:latest" $
+        setCommand [ "sleep", "infinity" ]
+          <<< setNetwork network
+          <<< setNetworkAliases [ "firstAlpine" ]
+
+      secondAlpine <- mkAffContainer "alpine:latest" $
+        setCommand [ "sleep", "infinity" ]
+          <<< setNetwork network
+          <<< setNetworkAliases [ "secondAlpine" ]
+
+      void $ withContainer firstAlpine $ \c ->
+        void $ withContainer secondAlpine $ \c' -> do
+          case (exec [ "getent", "hosts", "secondAlpine" ] c) of
+            Left e -> Console.log $ "Error: " <> e
+            Right { output, exitCode } -> do
+              Console.log $ "Exec output: " <> output <> ", exitCode: " <> show exitCode
+
+          case (exec [ "getent", "hosts", "firstAlpine" ] c') of
+            Left e -> Console.log $ "Error: " <> e
+            Right { output, exitCode } -> do
+              Console.log $ "Exec output: " <> output <> ", exitCode: " <> show exitCode
+  where
+  mkAffContainer :: ∀ a m. IsImage a => MonadAff m => a -> (TestContainer -> TestContainer) -> m TestContainer
+  mkAffContainer img conf = pure <$> conf $ mkContainer img
+```
+
 
 ## Docker Compose
 
