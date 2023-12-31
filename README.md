@@ -703,18 +703,76 @@ networkTest = do
   mkAffContainer img conf = pure <$> conf $ mkContainer img
 ```
 
-
 ## Docker Compose
+`Testcontainers` supports `docker-compose` format file and allows the creation
+and handling of environments quite easily. There are some *caveats* though, for
+example it will be up to the developers to expose the needed ports for the
+services and to guarantee that there will be no binding conflicts. Whenever it
+is possible, prefer creating your containers using the [containers'
+API](#create-container) instead.
 
 ### Create an environment
+Just like everything else, the constructors for the `DockerComposeEnvironment`
+are open but it is better to use the *smart constructor*:
+```purescript
+mkComposeEnvironment :: FilePath -> (Array FilePath) -> DockerComposeEnvironment
+```
+The constructor takes 2 parameters, a `FilePath` pointing to the root of your
+environment's context and an `Array String` of the compose files which will be
+used.
 
 ### Up an environment
+Once you have created your environment using the *smart constructor* described
+above, you can start it easily using the function `composeUp`:
+```purescript
+composeUp :: ∀ m. MonadAff m => DockerComposeEnvironment -> m (Either String DockerComposeEnvironment)
+```
+This function returns an `Either` of a `String` describing the error or a newly
+created, started docker compose environment.
 
 ### Down an environment
+To stop a running environment:
+```purescript
+composeDown :: ∀ m. MonadAff m => DockerComposeEnvironment -> m (Either String DockerComposeEnvironment)
+```
+Be aware that it is **not possible** to restart a stopped environment, you will
+need to create a new one.
 
 ### Use the `withCompose` helper
+To avoid the hassle of having to remember to stop your environment, a
+bracketing function is provided, very similar to the
+[`withContainer`](#use-the-withcontainer-helper) one described a little earlier
+for containers.
+```purescript
+withCompose :: ∀ m a. MonadAff m => DockerComposeEnvironment -> (DockerComposeEnvironment -> m a) -> m (Either String a)
+```
 
 ### Get a container from the environment
+Once your environment is up & running you can play with the included containers
+using the provided function:
+```purescript
+getContainer :: ∀ m. MonadEffect m => DockerComposeEnvironment -> String -> m (Either String TestContainer)
+```
+The `String` parameter is the name of the service from which you want to
+retrieve the container, note that if you're using `compose` version < 1.6 the
+name of the service will have a `_1` suffixed while with compose >= 1.6 it will
+be `-1`.
+
+If your compose file looks like this:
+```yaml
+version: "3.6"
+services:
+  nginx:
+    image: nginx:alpine
+```
+Then the name of the service will either be:
+- `nginx_1` if you're using compose < 1.6 or
+- `nginx-1` if using a more recent version of compose
+
+To avoid having to unwrap the `Either` every time, a commodity function is available:
+```purescript
+withComposeContainer :: ∀ m a. MonadAff m => DockerComposeEnvironment -> String -> (TestContainer -> m a) -> m (Either String a)
+```
 
 ### Set Wait strategies for containers
 
