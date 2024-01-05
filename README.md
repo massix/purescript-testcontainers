@@ -775,14 +775,55 @@ withComposeContainer :: ∀ m a. MonadAff m => DockerComposeEnvironment -> Strin
 ```
 
 ### Set Wait strategies for containers
+It is possible to define a [wait strategy](#set-a-wait-strategy) for a specific
+container which is part of the Compose environment using the provided function:
+
+```purescript
+setWaitStrategy :: Array WaitStrategy -> String -> DockerComposeEnvironment -> DockerComposeEnvironment
+```
+
+The second parameter of the function is the name of the service in the compose
+environment.
 
 ### Use Profiles
+In the Compose specifications it is possible to define different profiles in
+the same docker compose file, for example:
+
+```yaml
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    profiles: [ "db" ]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+  redis:
+    image: redis:alpine
+    profiles: [ "cache" ]
+    user: redis
+  alpine:
+    image: alpine:latest
+    command: [ "/bin/sh", "-c", "sleep infinity" ]
+    profiles: [ "backend" ]
+```
+
+Here, three profiles have been defined: **db**, **cache** and **backend**, each
+profile will allow the creation of one or more service. You can specify which
+profiles you want to use when creating your docker compose environment using
+the provided function:
+
+```purescript
+setProfiles :: Array String -> DockerComposeEnvironment -> DockerComposeEnvironment
+```
 
 ### Automatically rebuild
 
 ### Use Environment variables
 
-#### From files
+#### From Files
 
 #### From Code
 
