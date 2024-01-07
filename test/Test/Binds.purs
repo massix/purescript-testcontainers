@@ -9,8 +9,8 @@ import Node.Process as Process
 import Test.Assertions (shouldInclude)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
-import Test.TestContainers (setBindMounts, setCommand, setCopyFilesToContainer, setTmpFs, withContainer)
-import Test.TestContainers.Types (CopyContentToContainer(..), FileMode(..))
+import Test.Testcontainers (setBindMounts, setCommand, setCopyFilesToContainer, setTmpFs, withContainer)
+import Test.Testcontainers.Types (CopyContentToContainer(..), FileMode(..))
 import Test.Utils (launchCommand, mkAffContainer)
 
 bindTest :: Spec Unit

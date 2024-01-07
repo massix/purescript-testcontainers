@@ -8,8 +8,8 @@ import Test.Assertions (shouldInclude)
 import Test.Partials (forceRight)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (fail, shouldEqual, shouldSatisfy)
-import Test.TestContainers (setCommand, setExtraHosts, setNetwork, setNetworkAliases, withContainer)
-import Test.TestContainers.Network (getId, getName, mkNetwork, startNetwork)
+import Test.Testcontainers (setCommand, setExtraHosts, setNetwork, setNetworkAliases, withContainer)
+import Test.Testcontainers.Network (getId, getName, mkNetwork, startNetwork)
 import Test.Utils (launchCommand, mkAffContainer)
 
 networkTest :: Spec Unit

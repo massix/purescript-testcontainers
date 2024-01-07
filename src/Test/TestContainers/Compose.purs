@@ -1,4 +1,4 @@
-module Test.TestContainers.Compose
+module Test.Testcontainers.Compose
   ( mkComposeEnvironment
   , composeUp
   , composeUpWithServices
@@ -24,7 +24,7 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Aff.Compat (EffectFn3)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Uncurried (EffectFn4, runEffectFn3, runEffectFn4)
-import Test.TestContainers.Types (CreatedDockerComposeEnvironment, DockerComposeEnvironment(..), FilePath, Image(..), KV, PullPolicy, StartedDockerComposeEnvironment, StartedTestContainer, StoppedDockerComposeEnvironment, TestContainer(..), WaitStrategy)
+import Test.Testcontainers.Types (CreatedDockerComposeEnvironment, DockerComposeEnvironment(..), FilePath, Image(..), KV, PullPolicy, StartedDockerComposeEnvironment, StartedTestContainer, StoppedDockerComposeEnvironment, TestContainer(..), WaitStrategy)
 
 foreign import mkComposeEnvironmentImpl :: Fn2 FilePath (Array FilePath) CreatedDockerComposeEnvironment
 foreign import setWaitStrategyImpl

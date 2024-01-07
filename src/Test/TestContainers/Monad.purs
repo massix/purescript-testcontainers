@@ -1,4 +1,4 @@
-module Test.TestContainers.Monad
+module Test.Testcontainers.Monad
   ( WithContainer
   , configure
   , getContainer
@@ -33,8 +33,8 @@ module Test.TestContainers.Monad
 import Prelude
 
 import Data.Tuple (Tuple(..))
-import Test.TestContainers (setAddedCapabilities, setBindMounts, setCommand, setCopyFilesToContainer, setDefaultLogDriver, setDroppedCapabilities, setEntrypoint, setEnvironment, setExposedPorts, setExtraHosts, setIpcMode, setLabels, setName, setNetwork, setNetworkAliases, setNetworkMode, setPrivilegedMode, setPullPolicy, setResourcesQuota, setReuse, setSharedMemorySize, setStartupTimeout, setTmpFs, setUser, setWaitStrategy, setWorkingDirectory)
-import Test.TestContainers.Types (BindMounts, Capability, CopyContentToContainer, ExtraHost, FilePath, IPCMode, KV, MemorySize, Network, NetworkMode, PullPolicy, ResourcesQuota, StartupTimeout, TestContainer, TmpFS, User, WaitStrategy)
+import Test.Testcontainers (setAddedCapabilities, setBindMounts, setCommand, setCopyFilesToContainer, setDefaultLogDriver, setDroppedCapabilities, setEntrypoint, setEnvironment, setExposedPorts, setExtraHosts, setIpcMode, setLabels, setName, setNetwork, setNetworkAliases, setNetworkMode, setPrivilegedMode, setPullPolicy, setResourcesQuota, setReuse, setSharedMemorySize, setStartupTimeout, setTmpFs, setUser, setWaitStrategy, setWorkingDirectory)
+import Test.Testcontainers.Types (BindMounts, Capability, CopyContentToContainer, ExtraHost, FilePath, IPCMode, KV, MemorySize, Network, NetworkMode, PullPolicy, ResourcesQuota, StartupTimeout, TestContainer, TmpFS, User, WaitStrategy)
 
 newtype WithContainer a = WithContainer { runConfiguration :: TestContainer -> Tuple a TestContainer }
 

@@ -12,9 +12,9 @@ import Effect.Now (now)
 import Test.Assertions (shouldInclude)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual, shouldSatisfy)
-import Test.TestContainers (setCommand, setExposedPorts, setStartupTimeout, setWaitStrategy, withContainer)
-import Test.TestContainers.Monad (setCommandM, setEnvironmentM, setStartupTimeoutM, setWaitStrategyM)
-import Test.TestContainers.Types (StartupTimeout(..), WaitStrategy(..))
+import Test.Testcontainers (setCommand, setExposedPorts, setStartupTimeout, setWaitStrategy, withContainer)
+import Test.Testcontainers.Monad (setCommandM, setEnvironmentM, setStartupTimeoutM, setWaitStrategyM)
+import Test.Testcontainers.Types (StartupTimeout(..), WaitStrategy(..))
 import Test.Utils (launchCommand, mkAffContainer, mkAffContainerM)
 
 waitStrategyTest :: Spec Unit

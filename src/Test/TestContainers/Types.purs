@@ -1,4 +1,4 @@
-module Test.TestContainers.Types
+module Test.Testcontainers.Types
   ( KV
   , BindMounts
   , FilePath
