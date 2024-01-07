@@ -107,12 +107,12 @@ composeTest = do
         upped `shouldSatisfy` isRight
         let env = unsafePartial $ forceRight upped
 
-        void $ withComposeContainer env "buildedRedis-1" \cnt -> do
+        void $ withComposeContainer env "builtRedis-1" \cnt -> do
           launchCommand cnt [ "cat", "/info.txt" ]
             (\s -> s `shouldEqual` "redis built from dockerfile\n")
             (\code -> code `shouldEqual` 0)
 
-        void $ withComposeContainer env "buildedNginx-1" \cnt -> do
+        void $ withComposeContainer env "builtNginx-1" \cnt -> do
           launchCommand cnt [ "cat", "/info.txt" ]
             (\s -> s `shouldEqual` "nginx built from dockerfile\n")
             (\code -> code `shouldEqual` 0)
