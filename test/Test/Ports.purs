@@ -7,8 +7,8 @@ import Partial.Unsafe (unsafePartial)
 import Test.Partials (forceRight)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual, shouldNotEqual, shouldSatisfy)
-import Test.TestContainers (getFirstMappedPort, getMappedPort, setExposedPorts, setPullPolicy, setReuse, setWaitStrategy, withContainer)
-import Test.TestContainers.Types (PullPolicy(..), WaitStrategy(..))
+import Test.Testcontainers (getFirstMappedPort, getMappedPort, setExposedPorts, setPullPolicy, setReuse, setWaitStrategy, withContainer)
+import Test.Testcontainers.Types (PullPolicy(..), WaitStrategy(..))
 import Test.Utils (mkAffContainer)
 
 portMappingTest :: Spec Unit

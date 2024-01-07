@@ -7,8 +7,8 @@ import Effect.Aff (error, throwError)
 import Test.Assertions (shouldInclude)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
-import Test.TestContainers (setCommand, setCopyFilesToContainer, setEntrypoint, withContainer)
-import Test.TestContainers.Types (CopyContentToContainer(..), FileMode(..))
+import Test.Testcontainers (setCommand, setCopyFilesToContainer, setEntrypoint, withContainer)
+import Test.Testcontainers.Types (CopyContentToContainer(..), FileMode(..))
 import Test.Utils (launchCommand, mkAffContainer)
 
 entrypointTest :: Spec Unit

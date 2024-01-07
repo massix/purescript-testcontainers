@@ -13,8 +13,8 @@ import Test.Partials (forceRight)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual, shouldNotEqual, shouldSatisfy)
 import Test.Spec.Assertions.String (shouldStartWith)
-import Test.TestContainers (getFirstMappedPort, getHost, getId, getMappedPort, getName, setCommand, setName, setPrivilegedMode, setPullPolicy, setUser, setWorkingDirectory, withContainer)
-import Test.TestContainers.Types (PullPolicy(..))
+import Test.Testcontainers (getFirstMappedPort, getHost, getId, getMappedPort, getName, setCommand, setName, setPrivilegedMode, setPullPolicy, setUser, setWorkingDirectory, withContainer)
+import Test.Testcontainers.Types (PullPolicy(..))
 import Test.Utils (launchCommand, mkAffContainer)
 
 basicTest :: Spec Unit

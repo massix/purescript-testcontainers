@@ -1,4 +1,4 @@
-module Test.TestContainers
+module Test.Testcontainers
   ( exec
   , getFirstMappedPort
   , getHost
@@ -45,7 +45,7 @@ import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
-import Test.TestContainers.Types (class IsImage, BindMounts, Capability, CopyContentToContainer, ExecResult, ExtraHost, FilePath, GenericContainer, IPCMode, Image(..), KV, MemorySize, Network(..), NetworkMode(..), PullPolicy, ResourcesQuota, StartedTestContainer, StartupTimeout, StoppedTestContainer, TestContainer(..), TmpFS, User, WaitStrategy, capToString, toImage)
+import Test.Testcontainers.Types (class IsImage, BindMounts, Capability, CopyContentToContainer, ExecResult, ExtraHost, FilePath, GenericContainer, IPCMode, Image(..), KV, MemorySize, Network(..), NetworkMode(..), PullPolicy, ResourcesQuota, StartedTestContainer, StartupTimeout, StoppedTestContainer, TestContainer(..), TmpFS, User, WaitStrategy, capToString, toImage)
 
 foreign import mkContainerImpl :: (GenericContainer -> TestContainer) -> String -> TestContainer
 foreign import setExposedPortsImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array Int -> TestContainer

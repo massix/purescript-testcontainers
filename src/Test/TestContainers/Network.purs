@@ -1,4 +1,4 @@
-module Test.TestContainers.Network
+module Test.Testcontainers.Network
   ( mkNetwork
   , startNetwork
   , getId
@@ -12,7 +12,7 @@ import Data.Either (Either(..))
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Aff.Compat (EffectFn1, runEffectFn1)
 import Effect.Class (class MonadEffect, liftEffect)
-import Test.TestContainers.Types (GenericNetwork, Network(..), NetworkId, NetworkName, StartedNetwork)
+import Test.Testcontainers.Types (GenericNetwork, Network(..), NetworkId, NetworkName, StartedNetwork)
 
 foreign import mkNetworkImpl :: (GenericNetwork -> Network) -> Network
 foreign import startNetworkImpl :: EffectFn1 GenericNetwork (Promise StartedNetwork)

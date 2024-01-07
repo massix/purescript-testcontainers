@@ -7,7 +7,7 @@ import Effect.Aff (error, throwError)
 import Test.Assertions (shouldInclude)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
-import Test.TestContainers (setCommand, setEnvironment, withContainer)
+import Test.Testcontainers (setCommand, setEnvironment, withContainer)
 import Test.Utils (launchCommand, mkAffContainer)
 
 environmentTest :: Spec Unit

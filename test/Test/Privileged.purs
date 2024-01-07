@@ -8,8 +8,8 @@ import Effect.Aff (error)
 import Test.Assertions (shouldInclude)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions (shouldEqual)
-import Test.TestContainers (setPrivilegedMode, setWaitStrategy, withContainer)
-import Test.TestContainers.Types (WaitStrategy(..))
+import Test.Testcontainers (setPrivilegedMode, setWaitStrategy, withContainer)
+import Test.Testcontainers.Types (WaitStrategy(..))
 import Test.Utils (launchCommand, mkAffContainer)
 
 privilegedTest :: Spec Unit

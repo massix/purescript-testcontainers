@@ -75,7 +75,7 @@ import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Console as Console
-import Test.TestContainers as TC
+import Test.Testcontainers as TC
 
 main :: Effect Unit
 main = do
@@ -105,7 +105,7 @@ import Data.Either (Either(..))
 import Effect (Effect)
 import Effect.Aff (launchAff_)
 import Effect.Console as Console
-import Test.TestContainers as TC
+import Test.Testcontainers as TC
 
 main :: Effect Unit
 main = do

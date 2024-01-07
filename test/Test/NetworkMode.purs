@@ -6,8 +6,8 @@ import Data.Either (Either(..))
 import Effect.Aff (error, throwError)
 import Test.Spec (Spec, describe, it)
 import Test.Spec.Assertions.String (shouldContain)
-import Test.TestContainers (setCommand, setNetworkMode, withContainer)
-import Test.TestContainers.Types (NetworkMode(..))
+import Test.Testcontainers (setCommand, setNetworkMode, withContainer)
+import Test.Testcontainers.Types (NetworkMode(..))
 import Test.Utils (mkAffContainer)
 
 networkModeTest :: Spec Unit
