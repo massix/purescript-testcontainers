@@ -835,22 +835,22 @@ below:
 ```yaml
 version: '3.7'
 services:
-  buildedRedis:
+  builtRedis:
     build:
-      tags: [ "builded-redis:latest" ]
+      tags: [ "built-redis:latest" ]
       context: .
       dockerfile: ./Dockerfile.redis
-    image: builded-redis:latest
-  buildedNginx:
+    image: built-redis:latest
+  builtNginx:
     build:
-      tags: [ "builded-nginx:latest" ]
+      tags: [ "built-nginx:latest" ]
       context: .
       dockerfile: ./Dockerfile.nginx
     ports:
       - target: 80
         published: 8080
         protocol: tcp
-    image: builded-nginx:latest
+    image: built-nginx:latest
 ```
 
 The full example is available [in the tests folder](./test/compose/rebuildable/).
