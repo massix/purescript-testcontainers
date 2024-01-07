@@ -820,10 +820,111 @@ setProfiles :: Array String -> DockerComposeEnvironment -> DockerComposeEnvironm
 ```
 
 ### Automatically rebuild
+It is possible to tell to Testcontainers to automatically
+rebuild the images needed for your services each time you
+`up` your environment by using the following function:
+
+```purescript
+setRebuild :: DockerComposeEnvironment -> DockerComposeEnvironment
+```
+
+In order for this to work you need to use the `build`
+definition in your compose file, just like in the example
+below:
+
+```yaml
+version: '3.7'
+services:
+  buildedRedis:
+    build:
+      tags: [ "builded-redis:latest" ]
+      context: .
+      dockerfile: ./Dockerfile.redis
+    image: builded-redis:latest
+  buildedNginx:
+    build:
+      tags: [ "builded-nginx:latest" ]
+      context: .
+      dockerfile: ./Dockerfile.nginx
+    ports:
+      - target: 80
+        published: 8080
+        protocol: tcp
+    image: builded-nginx:latest
+```
+
+The full example is available [in the tests folder](./test/compose/rebuildable/).
 
 ### Use Environment variables
+Sometimes you want your `compose` file to be dynamically
+interpreted using some environment variables, this is
+possible with `Testcontainers` in two different ways.
+First, let's create our dynamic compose file as follows:
+
+```yaml
+version: '3.7'
+services:
+  alpine:
+    image: alpine:${ALPINE_TAG}
+    command: ["/bin/sh", "-c", "sleep infinity"]
+    environment:
+      SOMEVARIABLE: "${SOMEVARIABLE}"
+      QUOTEDVARIABLE: "${QUOTEDVARIABLE}"
+```
+
+For this example to work we need to provide a definition
+for the three environment variables, otherwise
+Testcontainers will refuse to `up` our environment.
 
 #### From Files
+The first option we have is to define our variables in a
+`dotenv` file (i.e. a file where each line has the syntax
+`VARIABLE=VALUE`) and then use the function below:
+
+```purescript
+setEnvironmentFile :: FilePath -> DockerComposeEnvironment -> DockerComposeEnvironment
+```
+
+Please notice that the first parameter is **relative to
+the root of our environment**, so if we have defined our
+environment using the following call:
+```purescript
+-- Remember:
+-- mkComposeEnvironment :: FilePath -> (Array FilePath) -> DockerComposeEnvironment
+let myEnv = mkComposeEnvironment "./test/compose/environmentfile” [ "compose.yaml" ]
+```
+
+And we want to use the `.env.custom` file located in
+`./test/compose/environmentfile` all we need to do is:
+
+```purescript
+let withEnvFile = setEnvironmentFile ".env.custom" env
+```
+
+As usual, a full working example is available in the
+[tests folder](./test/compose/environmentfile) of this
+repository.
 
 #### From Code
+Finally, it is also possible to set the environment
+variables programmatically using the following function:
+
+```purescript
+setEnvironment :: Array KV -> DockerComposeEnvironment -> DockerComposeEnvironment
+```
+
+For example, to fulfill the file described at the
+beginning of this chapter we could simply:
+
+```purescript
+-- Remember:
+-- mkComposeEnvironment :: FilePath -> (Array FilePath) -> DockerComposeEnvironment
+let myEnv = mkComposeEnvironment "./test/compose/environmentfile” [ "compose.yaml" ]
+let filledEnv =
+  setEnvironment
+    [ { key: "ALPINE_TAG", value: "latest" }
+    , { key: "SOMEVARIABLE", value: "v" }
+    , { key: "QUOTEDVARIABLE", value: "x" } ]
+    myEnv
+```
 
