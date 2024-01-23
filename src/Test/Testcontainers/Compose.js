@@ -1,4 +1,4 @@
-import { DockerComposeEnvironment, PullPolicy, StartedDockerComposeEnvironment, Wait } from "testcontainers"
+import { DockerComposeEnvironment, GenericContainer, PullPolicy, StartedDockerComposeEnvironment, Wait } from "testcontainers"
 
 const cloneDockerComposeEnvironment = (dce) => {
   const clone = new DockerComposeEnvironment("", "");

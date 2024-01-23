@@ -17,6 +17,46 @@ const cloneContainer = container => {
 
 export const mkContainerImpl = Constructor => image => Constructor(new GenericContainer(image));
 
+export const mkContainerFromDockerfileOptsImpl = Constructor => contextPath => maybeDockerfile => maybePullPolicy => img => maybeBuildArgs => maybeCache => Left => Right => async () => {
+  const container = GenericContainer.fromDockerfile(contextPath, maybeDockerfile.constructor.name === "Just" ? maybeDockerfile.value0 : undefined);
+
+  if (maybeBuildArgs.constructor.name === "Just") {
+    const converted = maybeBuildArgs.value0.reduce((acc, curr) => {
+      acc[curr.key] = curr.value;
+      return acc;
+    }, {});
+    container.withBuildArgs(converted);
+  }
+
+  if (maybeCache.constructor.name === "Just") {
+    container.withCache(maybeCache.value0);
+  }
+
+  if (maybePullPolicy.constructor.name === "Just") {
+    if (maybePullPolicy.value0.constructor.name === "AlwaysPull") {
+      container.withPullPolicy(PullPolicy.alwaysPull());
+    } else {
+      container.withPullPolicy(PullPolicy.defaultPolicy());
+    }
+  }
+
+  try {
+    return Right(Constructor(await container.build(img)));
+  } catch (e) {
+    return Left(e.message);
+  }
+};
+
+export const mkContainerFromDockerfileImpl = Constructor => contextPath => image => async () => {
+  const container = await GenericContainer.fromDockerfile(contextPath).withCache(false).build(image);
+  return Constructor(container);
+};
+
+export const mkContainerFromDockerfileCustomDockerfileImpl = Constructor => contextPath => dockerFile => image => async () => {
+  const container = await GenericContainer.fromDockerfile(contextPath, dockerFile).withCache(false).build(image);
+  return Constructor(container);
+};
+
 export const setPullPolicyImpl = GC => Constructor => PP => {
   const clone = cloneContainer(GC.value1);
   const imagePullPolicy = PP.constructor.name == "AlwaysPull" ? PullPolicy.alwaysPull() : PullPolicy.defaultPolicy();

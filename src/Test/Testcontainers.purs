@@ -6,6 +6,9 @@ module Test.Testcontainers
   , getMappedPort
   , getName
   , mkContainer
+  , mkContainerFromDockerfile
+  , mkContainerFromDockerfile'
+  , mkContainerFromDockerfileOpts
   , restartContainer
   , setAddedCapabilities
   , setBindMounts
@@ -42,12 +45,28 @@ import Prelude
 
 import Control.Promise (Promise, toAffE)
 import Data.Either (Either(..))
+import Data.Maybe (Maybe)
 import Effect (Effect)
+import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Test.Testcontainers.Types (class IsImage, BindMounts, Capability, CopyContentToContainer, ExecResult, ExtraHost, FilePath, GenericContainer, IPCMode, Image(..), KV, MemorySize, Network(..), NetworkMode(..), PullPolicy, ResourcesQuota, StartedTestContainer, StartupTimeout, StoppedTestContainer, TestContainer(..), TmpFS, User, WaitStrategy, capToString, toImage)
 
 foreign import mkContainerImpl :: (GenericContainer -> TestContainer) -> String -> TestContainer
+foreign import mkContainerFromDockerfileImpl :: (GenericContainer -> TestContainer) -> String -> String ->  Effect (Promise TestContainer)
+foreign import mkContainerFromDockerfileCustomDockerfileImpl :: (GenericContainer -> TestContainer) -> String -> String -> String -> Effect (Promise TestContainer)
+foreign import mkContainerFromDockerfileOptsImpl
+  :: (GenericContainer -> TestContainer) --^ constructor
+  -> String --^ ContextPath
+  -> Maybe String --^ Dockerfile
+  -> Maybe PullPolicy --^ Pull Policy
+  -> String --^ Image
+  -> Maybe (Array KV) --^ Build Args
+  -> Maybe Boolean --^ Cache
+  -> (String -> Either String TestContainer) --^ Left
+  -> (TestContainer -> Either String TestContainer) --^ Right
+  -> Effect (Promise (Either String TestContainer))
+
 foreign import setExposedPortsImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array Int -> TestContainer
 foreign import setPullPolicyImpl :: TestContainer -> (GenericContainer -> TestContainer) -> PullPolicy -> TestContainer
 foreign import setCommandImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array String -> TestContainer
@@ -135,6 +154,35 @@ mkContainer i =
     s@(Image orig) = toImage i
   in
     mkContainerImpl (GenericContainer s) orig
+
+mkContainerFromDockerfileOpts
+  :: ∀ a. IsImage a
+   => FilePath
+   -> Maybe String
+   -> Maybe PullPolicy
+   -> a
+   -> Maybe (Array KV)
+   -> Maybe Boolean
+   -> Aff (Either String TestContainer)
+mkContainerFromDockerfileOpts context fp pp img buildArgs cache =
+  let
+    s@(Image orig) = toImage img
+  in
+    toAffE $ mkContainerFromDockerfileOptsImpl (GenericContainer s) context fp pp orig buildArgs cache Left Right
+
+mkContainerFromDockerfile :: ∀ a. IsImage a => FilePath -> a -> Aff TestContainer
+mkContainerFromDockerfile fp img =
+  let
+    s@(Image orig) = toImage img
+  in
+    toAffE $ mkContainerFromDockerfileImpl (GenericContainer s) fp orig
+
+mkContainerFromDockerfile' :: ∀ a. IsImage a => FilePath -> FilePath -> a -> Aff TestContainer
+mkContainerFromDockerfile' context dockerFile img =
+  let
+    s@(Image orig) = toImage img
+  in
+    toAffE $ mkContainerFromDockerfileCustomDockerfileImpl (GenericContainer s) context dockerFile orig
 
 -- | Add an exposed port to the container
 setExposedPorts :: Array Int -> TestContainer -> TestContainer

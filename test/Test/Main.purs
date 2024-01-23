@@ -12,6 +12,7 @@ import Test.Binds (bindTest)
 import Test.Compose (composeTest)
 import Test.Entrypoint (entrypointTest)
 import Test.EnvironmentVariables (environmentTest)
+import Test.Images (imagesTest)
 import Test.Network (networkTest)
 import Test.NetworkMode (networkModeTest)
 import Test.Ports (portMappingTest)
@@ -37,6 +38,7 @@ main = launchAff_ $ runSpec' configuration [ consoleReporter ] $ do
     networkModeTest
     networkTest
     composeTest
+    imagesTest
 
   where
   -- Set a very high timeout due to docker having to pull all the images..
