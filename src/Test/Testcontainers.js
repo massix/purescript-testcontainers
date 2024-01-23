@@ -17,6 +17,16 @@ const cloneContainer = container => {
 
 export const mkContainerImpl = Constructor => image => Constructor(new GenericContainer(image));
 
+export const mkContainerFromDockerfileImpl = Constructor => contextPath => image => async () => {
+  const container = await GenericContainer.fromDockerfile(contextPath).withCache(false).build(image);
+  return Constructor(container);
+};
+
+export const mkContainerFromDockerfileCustomDockerfileImpl = Constructor => contextPath => dockerFile => image => async () => {
+  const container = await GenericContainer.fromDockerfile(contextPath, dockerFile).withCache(false).build(image);
+  return Constructor(container);
+};
+
 export const setPullPolicyImpl = GC => Constructor => PP => {
   const clone = cloneContainer(GC.value1);
   const imagePullPolicy = PP.constructor.name == "AlwaysPull" ? PullPolicy.alwaysPull() : PullPolicy.defaultPolicy();

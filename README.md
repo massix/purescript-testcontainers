@@ -13,6 +13,7 @@
   - [Nix](#nix)
 - [Containers](#containers)
   - [Create container](#create-container)
+  - [Create a container from a Dockerfile](#create-a-container-from-a-dockerfile)
   - [Start a container](#start-a-container)
   - [Stop a container](#stop-a-container)
   - [Configuring the container](#configuring-the-container)
@@ -237,6 +238,30 @@ mkContainer (Image "postgres:14-alpine")
 mkContainer "postgres:14-alpine"
 ```
 
+### Create a container from a Dockerfile
+It is also possible to create a container from a Dockerfile definition, the system
+will `docker build` it for you and afterwards you will have a useable container.
+
+#### Example
+
+```purescript
+main :: Aff Unit
+main = do
+  cnt <- mkContainerFromDockerfile "./path/to/a/folder" "my-image:latest"
+```
+
+The first parameter of the `mkContainerFromDockerfile` function is a `FilePath` to a
+folder that contains a `Dockerfile` (a build context). The second parameter is the
+final name of the image which will be built.
+
+As an alternative, you can use `mkContainerFromDockerfile'` which accepts a third
+parameter: the name of a `Dockerfile` to use to build the image.
+
+```purescript
+main :: Aff Unit
+main = do
+  cnt <- mkContainerFromDockerfile' "./path/to/a/folder" "Dockerfile" "my-image:latest"
+```
 
 ### Start a container
 Once you have your container, you can start it by calling the `startContainer`
@@ -302,7 +327,7 @@ configureContainer =
 
 main :: Effect Unit
 main =
-  let 
+  let
     container = configureContainer $ mkContainer "redis:latest"
   in do
     startContainer container
@@ -459,7 +484,7 @@ if the predicate returns `true`.
 ```purescript
 main :: Aff Unit
 main = do
-  let config = 
+  let config =
     setWaitStrategy [ HttpResponsePredicate "/" 80 (\s -> "welcome to nginx" `includes` s) ]
       <<< setExposedPorts [ 80 ]
 
