@@ -21,7 +21,7 @@ networkTest = do
         Left err -> fail err
         Right _ -> pure unit
 
-    it "retrieve network information" $ do
+    it "should retrieve network information" $ do
       otherNetwork <- startNetwork mkNetwork
       otherNetwork `shouldSatisfy` isRight
 
