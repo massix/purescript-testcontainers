@@ -242,6 +242,22 @@ mkContainer "postgres:14-alpine"
 It is also possible to create a container from a Dockerfile definition, the system
 will `docker build` it for you and afterwards you will have a useable container.
 
+There are actually three different flavours of the same basic functionality:
+1. `mkContainerFromDockerfile` which takes a `FilePath` to a context (i.e., a folder
+    containing a `Dockerfile`) and the name of an image, which will be used as the
+    result of the build;
+1. `mkContainerFromDockerfile'` which takes a `FilePath` to a context, a single
+    `Dockerfile` which **must** be inside of the context and the name of an image,
+    which will be used as the result of the build;
+1. a more complete `mkContainerFromDockerfileOpts` which takes a lot of parameters but
+    gives more control about all the building options, the parameter it takes are:
+    * `FilePath` to a context;
+    * `Maybe String` of a Dockerfile (if `Nothing`, will use `Dockerfile`);
+    * `Maybe PullPolicy` to specify the `PullPolicy` to use;
+    * `IsImage` for the image name;
+    * `Maybe (Array KV)` for the build arguments;
+    * `Maybe Boolean` which, if `Just true` will reuse the cache
+
 #### Example
 
 ```purescript
@@ -262,6 +278,9 @@ main :: Aff Unit
 main = do
   cnt <- mkContainerFromDockerfile' "./path/to/a/folder" "Dockerfile" "my-image:latest"
 ```
+
+For the third version of the function, it is better to take a look at the
+[test file directly](./test/Test/Images.purs), which contains a full working call of the function.
 
 ### Start a container
 Once you have your container, you can start it by calling the `startContainer`

@@ -8,6 +8,7 @@ module Test.Testcontainers
   , mkContainer
   , mkContainerFromDockerfile
   , mkContainerFromDockerfile'
+  , mkContainerFromDockerfileOpts
   , restartContainer
   , setAddedCapabilities
   , setBindMounts
@@ -44,6 +45,7 @@ import Prelude
 
 import Control.Promise (Promise, toAffE)
 import Data.Either (Either(..))
+import Data.Maybe (Maybe)
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -53,6 +55,18 @@ import Test.Testcontainers.Types (class IsImage, BindMounts, Capability, CopyCon
 foreign import mkContainerImpl :: (GenericContainer -> TestContainer) -> String -> TestContainer
 foreign import mkContainerFromDockerfileImpl :: (GenericContainer -> TestContainer) -> String -> String ->  Effect (Promise TestContainer)
 foreign import mkContainerFromDockerfileCustomDockerfileImpl :: (GenericContainer -> TestContainer) -> String -> String -> String -> Effect (Promise TestContainer)
+foreign import mkContainerFromDockerfileOptsImpl
+  :: (GenericContainer -> TestContainer) --^ constructor
+  -> String --^ ContextPath
+  -> Maybe String --^ Dockerfile
+  -> Maybe PullPolicy --^ Pull Policy
+  -> String --^ Image
+  -> Maybe (Array KV) --^ Build Args
+  -> Maybe Boolean --^ Cache
+  -> (String -> Either String TestContainer) --^ Left
+  -> (TestContainer -> Either String TestContainer) --^ Right
+  -> Effect (Promise (Either String TestContainer))
+
 foreign import setExposedPortsImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array Int -> TestContainer
 foreign import setPullPolicyImpl :: TestContainer -> (GenericContainer -> TestContainer) -> PullPolicy -> TestContainer
 foreign import setCommandImpl :: TestContainer -> (GenericContainer -> TestContainer) -> Array String -> TestContainer
@@ -140,6 +154,21 @@ mkContainer i =
     s@(Image orig) = toImage i
   in
     mkContainerImpl (GenericContainer s) orig
+
+mkContainerFromDockerfileOpts
+  :: ∀ a. IsImage a
+   => FilePath
+   -> Maybe String
+   -> Maybe PullPolicy
+   -> a
+   -> Maybe (Array KV)
+   -> Maybe Boolean
+   -> Aff (Either String TestContainer)
+mkContainerFromDockerfileOpts context fp pp img buildArgs cache =
+  let
+    s@(Image orig) = toImage img
+  in
+    toAffE $ mkContainerFromDockerfileOptsImpl (GenericContainer s) context fp pp orig buildArgs cache Left Right
 
 mkContainerFromDockerfile :: ∀ a. IsImage a => FilePath -> a -> Aff TestContainer
 mkContainerFromDockerfile fp img =

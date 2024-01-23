@@ -1,0 +1,8 @@
+# vim: ft=dockerfile
+
+FROM alpine:latest
+
+ARG FIRST_PKG
+ARG SECOND_PKG
+
+RUN apk add --no-cache $FIRST_PKG $SECOND_PKG
